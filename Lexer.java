@@ -1,6 +1,83 @@
 import java.io.*;
 
 public class Lexer{
+
+    File f;
+    FileInputStream fis;
+    char x;
+    state z;
+    String buf;
+    Token t;
+
+    abstract public class Token{
+        int len;
+        abstract int getType();
+        public Token(){
+            len=0;
+        }
+    }
+    //Nicht möglich da TokenTyp erst später bekannt wird :) LÖSUNG??
+    public class NumToken extends Token{
+        long num;
+        int getType(){
+            return 0;
+        }
+    }
+    public class StrToken extends Token{
+        String str;
+        int getType(){
+            return 1;
+        }
+    }
+    public class SymToken extends Token{
+        int sym;
+        int getType(){
+            return 2;
+        }
+    }
+
+    public Lexer(String fileName)throws Exception{
+        if(!fileName.contains(".pl0"))fileName+=".pl0";
+
+        f=new File(fileName);
+        if (!f.exists()|| !f.canRead())
+        {
+            System.out.println("Can't read "+f);
+            return;
+        }
+        fis=new FileInputStream(f);
+        x = (char)fis.read();
+    }
+
+    Token Lex(){
+        z.nextS=0;
+        state zx;
+        //t=new Token(); ->Fehler untersuchen
+        do{
+            zx=automat[z.nextS][signClass[x]];
+            zx.func();
+        }while(z.nextS!=9);
+        return t;
+    }
+
+    void l()throws Exception{
+        x = (char)fis.read();
+    }
+    void sl()throws Exception{
+        buf+=x;
+        l();
+    }
+    // void b(){
+    //     int i,j;
+    //     switch(z.nextS){
+    //         case 3:
+    //         case 4:
+    //         case 5:
+    //         case 0:
+    //             t.
+    //     }
+    // }
+
     abstract public class state{
         int nextS;
         public state(int state){

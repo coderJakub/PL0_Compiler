@@ -9,15 +9,28 @@ public class Lexer{
     String buf;
     Token t;
 
-    abstract public class Token{
+    public class Token{
         int len;
-        abstract int getType();
+        int type; //0->Empty, 1->Sym, 2->Num, 3->Ident
+        int posLine;
+        int posCol;
+        //Data
+        long num;
+        String str;
+        int sym; //:=128, <=129, >=130
+
         public Token(){
             len=0;
+            type=0;
+            posLine=0;
+            posCol=0;
+            num=0;
+            str="";
+            sym=0;
         }
     }
-    //Nicht möglich da TokenTyp erst später bekannt wird :) LÖSUNG??
-    public class NumToken extends Token{
+    //Nicht möglich da TokenTyp erst später bekannt wird
+    /*public class NumToken extends Token{
         long num;
         int getType(){
             return 0;
@@ -34,9 +47,9 @@ public class Lexer{
         int getType(){
             return 2;
         }
-    }
+    }*/
 
-    public Lexer(String fileName)throws Exception{
+    public Lexer(String fileName){
         if(!fileName.contains(".pl0"))fileName+=".pl0";
 
         f=new File(fileName);
@@ -45,38 +58,72 @@ public class Lexer{
             System.out.println("Can't read "+f);
             return;
         }
-        fis=new FileInputStream(f);
-        x = (char)fis.read();
+        try{
+            fis=new FileInputStream(f);
+            x = (char)fis.read();   
+        }
+        catch(Exception e){
+            System.out.println("Can't read "+f);
+            return;
+        }
     }
 
     Token Lex(){
         z.nextS=0;
         state zx;
-        //t=new Token(); ->Fehler untersuchen
+        t=new Token();
         do{
             zx=automat[z.nextS][signClass[x]];
-            zx.func();
+            z.func();
+            z=zx;
         }while(z.nextS!=9);
         return t;
     }
 
-    void l()throws Exception{
-        x = (char)fis.read();
+    void l(){
+        try{
+            x = (char)fis.read();   
+        }
+        catch(Exception e){
+            System.out.println("Can't read "+f);
+            return;
+        }
     }
-    void sl()throws Exception{
+    void sl(){
         buf+=x;
         l();
     }
-    // void b(){
-    //     int i,j;
-    //     switch(z.nextS){
-    //         case 3:
-    //         case 4:
-    //         case 5:
-    //         case 0:
-    //             t.
-    //     }
-    // }
+    void b(){
+        switch(z.nextS){
+            case 3:
+            case 4:
+            case 5:
+            case 0:
+                t.sym=buf.charAt(0);
+                t.type=1;
+                break;
+            case 1:
+                t.num=Long.parseLong(buf);
+                t.type=2;
+                break;
+            case 6:
+                t.sym=128;
+                t.type=1;
+                break;
+            case 7:
+                t.sym=129;
+                t.type=1;
+                break;
+            case 8:
+                t.sym=130;
+                t.type=1;
+                break;
+            case 2:
+                t.str=buf;
+                t.type=3;
+                break;
+        }
+    }
 
     abstract public class state{
         int nextS;
@@ -90,6 +137,7 @@ public class Lexer{
             super(state);
         }
         void func(){
+            sl();
         }
     }
     public class stateSGL extends state{
@@ -97,7 +145,8 @@ public class Lexer{
             super(state);
         }
         void func(){
-
+            buf+=Character.toUpperCase(x);
+            l();
         }
     }
     public class stateL extends state{
@@ -105,7 +154,7 @@ public class Lexer{
             super(state);
         }
         void func(){
-
+            l();
         }
     }
     public class stateB extends state{
@@ -113,7 +162,7 @@ public class Lexer{
             super(state);
         }
         void func(){
-
+            b();
         }
     }
     public class stateSLB extends state{
@@ -121,7 +170,7 @@ public class Lexer{
             super(state);
         }
         void func(){
-
+            sl(); b();
         }
     }
     // 0:Sonderzeichen, 1: Ziffer, 2:Buchstabe 3: : 4: = 5: < 6: > 7: sonstige Steuerzeichen 

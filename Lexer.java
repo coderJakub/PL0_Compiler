@@ -5,11 +5,11 @@ public class Lexer{
     File f;
     FileInputStream fis;
     char x;
-    state z;
     String buf;
     Token t;
+    int state;
 
-    public class Token{
+    public static class Token{
         int len;
         int type; //0->Empty, 1->Sym, 2->Num, 3->Ident
         int posLine;
@@ -48,7 +48,7 @@ public class Lexer{
             return 2;
         }
     }*/
-
+    public Lexer(){};
     public Lexer(String fileName){
         if(!fileName.contains(".pl0"))fileName+=".pl0";
 
@@ -60,7 +60,7 @@ public class Lexer{
         }
         try{
             fis=new FileInputStream(f);
-            x = (char)fis.read();   
+            x = (char)fis.read();  
         }
         catch(Exception e){
             System.out.println("Can't read "+f);
@@ -69,14 +69,16 @@ public class Lexer{
     }
 
     Token Lex(){
-        z.nextS=0;
         state zx;
         t=new Token();
+        buf="";
+        state=0;
         do{
-            zx=automat[z.nextS][signClass[x]];
-            z.func();
-            z=zx;
-        }while(z.nextS!=9);
+            zx=automat[state][signClass[x]];
+           // System.out.println(zx.getClass().getName()+state);
+            zx.func();
+            state= zx.nextS;
+        }while(zx.nextS!=9);
         return t;
     }
 
@@ -91,10 +93,12 @@ public class Lexer{
     }
     void sl(){
         buf+=x;
+        //System.out.println(buf);
         l();
     }
     void b(){
-        switch(z.nextS){
+        //System.out.println(buf+" "+state);
+        switch(state){
             case 3:
             case 4:
             case 5:
@@ -145,8 +149,8 @@ public class Lexer{
             super(state);
         }
         void func(){
-            buf+=Character.toUpperCase(x);
-            l();
+            x-=(x>65&&x<90)?0:(97-65);
+            sl();
         }
     }
     public class stateL extends state{
@@ -191,7 +195,7 @@ public class Lexer{
     state[][] automat={
         /*z    So,                  Zif,                Bu,                    :,                   =,                    <,                   >,                   Steur   */
         /*------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-        /*0*/{new stateSLB(9),new stateSL(1),new stateSGL(2),new stateSL(3),new stateSLB(9),new stateSL(4),new stateSL(5),new stateB(9)},
+        /*0*/{new stateSLB(9),new stateSL(1),new stateSGL(2),new stateSL(3),new stateSLB(9),new stateSL(4),new stateSL(5),new stateSLB(9)},
         /*1*/{  new stateB(9),new stateSL(1),  new stateB(9), new stateB(9),  new stateB(9), new stateB(9), new stateB(9),new stateB(9)},
         /*2*/{  new stateB(9),new stateSL(2),new stateSGL(2), new stateB(9),  new stateB(9), new stateB(9), new stateB(9),new stateB(9)},
         /*3*/{  new stateB(9), new stateB(9),  new stateB(9), new stateB(9), new stateSL(6), new stateB(9), new stateB(9),new stateB(9)},

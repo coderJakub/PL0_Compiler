@@ -26,7 +26,7 @@ public class Lexer{
 
     //Automatentabelle (Zustand 9: Endzustand)
     state[][] automat={
-        /*z    So,                  Zif,                Bu,                    :,                   =,                    <,                   >,                   Steur   */
+        /*z           So,          Zif,             Bu,              :,              =,            <,             >,          Steur   */
         /*------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
         /*0*/{new stateSLB(9),new stateSL(1),new stateSGL(2),new stateSL(3),new stateSLB(9),new stateSL(4),new stateSL(5),new stateL(0)},
         /*1*/{  new stateB(9),new stateSL(1),  new stateB(9), new stateB(9),  new stateB(9), new stateB(9), new stateB(9),new stateB(9)},
@@ -101,18 +101,16 @@ public class Lexer{
     }
 
     //Tokenklasse
-    public static class Token{ //static, da sonst nicht von Test.java aus zugreifbar -> Lösung? 
-        int len;
+    public class Token{
         int type; //0->Empty, 1->Sym, 2->Num, 3->Ident, 4->Keyword
         int posLine;
         int posCol;
         //Data
         long num;
         String str;
-        int sym; //:=128, <=129, >=130
+        int sym; //:=128, <=129, >=130, "BEGIN"131, "CALL",132 "CONST"133, "DO"134, "END"135, "IF"136, "ODD"137, "PROCEDURE"138, "THEN"139, "VAR"140, "WHILE"141
 
         public Token(){
-            len=0;
             type=0;
             posLine=0;
             posCol=0;
@@ -121,25 +119,6 @@ public class Lexer{
             sym=0;
         }
     }
-    //Schlecht zu implementieren, da Tokenklasse bekannt sein muss um Datentyp des Inhalts zu bestimmen -> obere Variante besser?
-    /*public class NumToken extends Token{
-        long num;
-        int getType(){
-            return 0;
-        }
-    }
-    public class StrToken extends Token{
-        String str;
-        int getType(){
-            return 1;
-        }
-    }
-    public class SymToken extends Token{
-        int sym;
-        int getType(){
-            return 2;
-        }
-    }*/
 
     //Konstruktoren
     public Lexer(){};
@@ -166,7 +145,7 @@ public class Lexer{
     Token Lex(){
         state zx;
         t=new Token();
-        buf=""; //Aktuell nicht ein Buchstabe im Vorraus bekannt -> Puffer nicht komplett löschen?
+        buf=""; 
         state=0;
         do{
             zx=automat[state][signClass[x]];
@@ -219,13 +198,39 @@ public class Lexer{
                 t.type=1;
                 break;
             case 2:
-                boolean kw =false;
+                int kw =-1;
 
-                for(String s:keywords)if(s.equals(buf))kw=true;
-
-                t.str=buf;
-                t.type=(kw)?4:3;
+                for(int i=0; i<keywords.length; i++)if(keywords[i].equals(buf))kw=i;
+                if(kw!=-1){
+                    t.sym=kw+131;
+                    t.type=1;
+                }
+                else{
+                    t.str=buf;
+                    t.type=3;
+                }
                 break;
         }
     }
 }
+
+
+    //Variante mit abgeleiteten Klassen als Token
+    /*public class NumToken extends Token{
+        long num;
+        int getType(){
+            return 0;
+        }
+    }
+    public class StrToken extends Token{
+        String str;
+        int getType(){
+            return 1;
+        }
+    }
+    public class SymToken extends Token{
+        int sym;
+        int getType(){
+            return 2;
+        }
+    }*/

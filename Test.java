@@ -3,13 +3,14 @@ public class Test extends Lexer{
     
     public static void main(String args[]){
         if(args.length!=1)return;
-        Token t = new Token();
         Lexer lexer = new Lexer(args[0]);
+        Lexer.Token t = lexer.new Token(); //sodass auf eine none static inner class zugegriffen werden kann
         while(t.type!=1 || t.sym!='.'){
             t=lexer.Lex();
             switch(t.type){
                 case 1:
-                    System.out.println("Symbol: "+(char)t.sym);
+                    if(t.sym<128)System.out.println("Symbol: "+(char)t.sym);
+                    else System.out.println("Symbol: "+t.sym);
                     break;
                 case 2:
                     System.out.println("Number: "+t.num);

@@ -1,13 +1,13 @@
 import java.io.*;
 
 public class Lexer{
-
     File f;
     FileInputStream fis;
     char x;
     String buf;
     Token t;
     int state;
+    String[] keywords = {"BEGIN", "CALL", "CONST", "DO", "END", "IF", "ODD", "PROCEDURE", "THEN", "VAR", "WHILE"};
 
     //Definieren der Zeichenklassen für kleinere Automatentabelle
     // 0:Sonderzeichen, 1: Ziffer, 2:Buchstabe 3: : 4: = 5: < 6: > 7: sonstige Steuerzeichen 
@@ -24,11 +24,11 @@ public class Lexer{
         /*70*/ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0  /*70*/
     };
 
-    //Automatentabelle (Zustand 9: Endzustand)           für Steuerzeichen SLB??? wenn Puffer nicht leer, dann B, sonst SLB
+    //Automatentabelle (Zustand 9: Endzustand)
     state[][] automat={
         /*z    So,                  Zif,                Bu,                    :,                   =,                    <,                   >,                   Steur   */
         /*------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-        /*0*/{new stateSLB(9),new stateSL(1),new stateSGL(2),new stateSL(3),new stateSLB(9),new stateSL(4),new stateSL(5),new stateSLB(9)},
+        /*0*/{new stateSLB(9),new stateSL(1),new stateSGL(2),new stateSL(3),new stateSLB(9),new stateSL(4),new stateSL(5),new stateL(0)},
         /*1*/{  new stateB(9),new stateSL(1),  new stateB(9), new stateB(9),  new stateB(9), new stateB(9), new stateB(9),new stateB(9)},
         /*2*/{  new stateB(9),new stateSL(2),new stateSGL(2), new stateB(9),  new stateB(9), new stateB(9), new stateB(9),new stateB(9)},
         /*3*/{  new stateB(9), new stateB(9),  new stateB(9), new stateB(9), new stateSL(6), new stateB(9), new stateB(9),new stateB(9)},
@@ -65,7 +65,7 @@ public class Lexer{
             super(state);
         }
         void func(){
-            x-=(x>65&&x<90)?0:(97-65);
+            x=Character.toUpperCase(x);  //-=(x>65&&x<90)?0:(97-65);
             sl();
         }
     }
@@ -103,7 +103,7 @@ public class Lexer{
     //Tokenklasse
     public static class Token{ //static, da sonst nicht von Test.java aus zugreifbar -> Lösung? 
         int len;
-        int type; //0->Empty, 1->Sym, 2->Num, 3->Ident
+        int type; //0->Empty, 1->Sym, 2->Num, 3->Ident, 4->Keyword
         int posLine;
         int posCol;
         //Data
@@ -219,8 +219,12 @@ public class Lexer{
                 t.type=1;
                 break;
             case 2:
+                boolean kw =false;
+
+                for(String s:keywords)if(s.equals(buf))kw=true;
+
                 t.str=buf;
-                t.type=3;
+                t.type=(kw)?4:3;
                 break;
         }
     }

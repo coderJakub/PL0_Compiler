@@ -1,4 +1,3 @@
-import java.io.*;
 
 public class Test extends Lexer{
     
@@ -17,6 +16,9 @@ public class Test extends Lexer{
                     break;
                 case 3:
                     System.out.println("String: "+t.str);
+                    break;
+                case 4:
+                    System.out.println("Keyword: "+t.str);
                     break;
                 default:
                     System.out.println("Unknown Token: "+t.type);

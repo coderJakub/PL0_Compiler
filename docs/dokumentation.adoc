@@ -9,6 +9,73 @@ Jakub Kliemann <jakub.kliemann@stud.htw-dresden.de>
 
 == 1. Lexer
 
+[.underline.]#Umfang#: Soll bei Aufruf der Funktion Lex das nächste Token liefern. Ein Token besteht dabei aus Typ, Position und Inhalt.
+
+[.underline]#Token/Morphem# ist durch folgende Gramatik definiert:
+
+.Grammatik
+image::Lexer-Gramatik.png[]
+.ZustandGraph
+image::ZustandGraph.png[]
+
+=== 1.1 Implementation der Automatentabelle
+
+* Zuerst wurde eine Tabelle erzeugt welche allen Ascii-Zeichen eine Zeichenklasse zuordnet -> Index des Array ist der Ascii-Wert.
+* Danach Automatentabelle erzeugen, welche aus einer zweidimensionalen Tablle besteht. Die erste Dimension sind die Zustände, die zweite Dimension sind die Zeichenklassen.
+** Bei jeden Zugriff auf die Tabelle wird ein Zustand zurück gegeben.
+** Die Zustände bestehen aus dem Zustand und der Funktion, welche zum Übergang in den nächsten Zustand ausgeführt werden soll.
+
+=== 1.2 Implementation der Zustandklassen und der dazugehörigen Funktionen
+
+* Jeder Zustand besteht aus einem dem int des nächsten Zustandes und einer Funktion, welche zum Übergang in den nächsten Zustand ausgeführt werden soll.
+* Der Typ des Zustandes wird durch den Klassentyp definiert.
+** Klassentypen sind: 
+. *stateSL* -> Schreiben und Lesen 
+. *stateL* -> Lesen
+. *stateSGL* -> Schreiben als Großbuchstabe und Lesen
+. *stateB* -> Beenden
+. *stateSLB* -> Schreiben, Lesen und Beenden
+** Alle diese Klassen sind von der Klasse *state* abgeleitet, welche eine Abstrakte Funtion und die `_int state_` Variable enthält.
+
+* Die Funtionen Rufen jeweils die Grundfunktionen *l()*, *sl()* und *b()* auf
+. *l()* -> Liest in die globale Variable `_char x_` das nächste Zeichen des Files ein.
+. *sl()* -> Fügt in die globale Variable '_String buffer_' x ein und ruft dann l() auf.
+. *b()* -> Legt je nachdem im welchen Zustand sich der Automat befindet, den Typ und Inhalt des Tokens fest. Es wird im Fall eines String zwischen Symbol (wie WHILE) und Bezeichner unterschieden, indem ein Array mit allen keywords untersucht wird
+
+=== 1.3 Implementation der Tokenklasse
+
+* Der Typ des Tokens wird durch einen int definiert.
+** 0->Empty, 1->Symbol, 2->Number, 3->Identifier
+* Beim Typ Symbol wird die Variable `_int sym_` belegt
+** Im Fall eines Ascii Zeichen einfach dessen Wert
+** Erweiterte Symbole erhalten folgende Nummer:
+*** ':=' ->128, '\<=' ->129, '>=' ->130, "BEGIN" ->131, "CALL" ->132, "CONST" ->133, "DO" ->134, "END" ->135, "IF" ->136, "ODD" ->137, "PROCEDURE" ->138, "THEN" ->139, "VAR" ->140, "WHILE" ->141
+* Beim Typ Number wird die Variable `_long num_` belegt
+* Beim Typ Identifier wird die Variable `_String str_` belegt
+
+=== 1.4 Implementation der Lex-Funktion und des Constructors
+* Dem Constructor wird im Normalfall eine Datei übergeben, welche dann geöffnet wird. Zugleich wird ein FileInputStrem erzeugt, und das erste Zeichen wird in x gelesen.
+* Die Lex-Funtion wird aufgerufen, wenn ein neues Token benötigt wird
+** Zuerst wird eine Referenz auf einen Zustand erzeugt `_state zx_` und der globalen Variable `_Token t_` ein neues Token zugewiesen.
+** Daraufhin wird `_buf=""_` und die globale Variable `_int state_` welche den Zustand des Automaten speichert, auf 0 gesetzt.
+** Solange nun der Endzustand 9 nicht erreicht wird, wird in einer while-Schleife der Automat durchlaufen.
+*** Zuerst wird zx der nächste Zustand zugewiesen, dann die Funktion aufgerufen und zuletzt state der neue Zustand zugewiesen.
+[source, java]
+----
+        zx=automat[state][signClass[x]];
+        zx.func();
+        state= zx.nextS;
+----
+
+
+* Zuletzt wir das `_Token t_` zurückgegeben.
+
+=== 1.5 Testen des Lexers
+
+Zum Testen de Lexers kann folgendes Java-Projekt verwendet werden, dieses generiert alle Tokens und gibt Typ und Inhalt aus.
+
+link:../LexerTest.java[]
+
 
 == 2. Parser
 === 2.2 Implementation der Graphen

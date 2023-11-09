@@ -102,7 +102,7 @@ public class Lexer{
 
     //Tokenklasse
     public class Token{
-        int type; //0->Empty, 1->Sym, 2->Num, 3->Ident, 4->Keyword
+        int type; //0->Empty, 1->Sym, 2->Num, 3->Ident
         int posLine;
         int posCol;
         //Data

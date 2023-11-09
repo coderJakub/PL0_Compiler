@@ -17,6 +17,9 @@ public class Parser extends Lexer{
         }
     }
     public class ArcNil extends Arc{
+        public Nil(int n){
+            super(n,0);
+        }
     }
     
     public class ArcSymbol extends Arc{
@@ -41,8 +44,8 @@ public class Parser extends Lexer{
         }
     }
     public class ArcEnd extends Arc{
-        public ArcEnd(int n, int a){
-            super(n,a);
+        public ArcEnd(){
+            super(0,0);
         }
     }
     Arc[] block;
@@ -61,25 +64,25 @@ public class Parser extends Lexer{
         /*3*/    new ArcToken(lexer.new Token(2), 4,0),
         /*4*/    new ArcSymbol(',', 1, 5),
         /*5*/    new ArcSymbol(';', 7, 0),
-        /*6*/    new ArcNil(),
+        /*6*/    new ArcNil(7),
         /*7*/    new ArcSymbol(140, 8,11),
         /*8*/    new ArcToken(lexer.new Token(3), 9,0),
         /*9*/    new ArcSymbol(',', 8, 10),
         /*10*/   new ArcSymbol(';', 12, 0),
-        /*11*/   new ArcNil(),
+        /*11*/   new ArcNil(12),
         /*12*/   new ArcSymbol(138, 13, 17),
         /*13*/   new ArcToken(lexer.new Token(3), 14, 0),
         /*14*/   new ArcSymbol(';', 15, 0),
         /*15*/   new ArcGraph(block, 16, 0),
         /*16*/   new ArcSymbol(';', 12, 0),
-        /*17*/   new ArcNil(),
+        /*17*/   new ArcNil(18),
         /*18*/   new ArcGraph(statement, 19, 0),
-        /*E*/    new ArcEnd(0,0)
+        /*E*/    new ArcEnd()
         };
         program=new Arc[]{
         /*0*/    new ArcGraph(block, 1, 0),
         /*1*/    new ArcSymbol('.',  2, 0),
-        /*E*/    new ArcEnd(0,0)
+        /*E*/    new ArcEnd()
         };
         statement =new Arc[]{
         /*0*/    new ArcToken(lexer.new Token(3), 1, 3),
@@ -103,30 +106,30 @@ public class Parser extends Lexer{
         /*18*/   new ArcToken(lexer.new Token(3), 22, 0),
         /*19*/   new ArcSymbol('!', 20, 21),
         /*20*/   new ArcGraph(expression, 22, 21),
-        /*21*/   new ArcNil(),
-        /*E*/    new ArcEnd(0, 0)
+        /*21*/   new ArcNil(22),
+        /*E*/    new ArcEnd()
         };
         expression =new Arc[]{
         /*0*/    new ArcSymbol('-', 1, 2),
         /*1*/    new ArcGraph(term, 3, 0),
         /*2*/    new ArcGraph(term, 3, 0),
-        /*3*/    new ArcNil(),
+        /*3*/    new ArcNil(4),
         /*4*/    new ArcSymbol('+', 6, 5),
         /*5*/    new ArcSymbol('-', 7, 8),
         /*6*/    new ArcGraph(term, 3, 0),
         /*7*/    new ArcGraph(term, 3, 0),
-        /*8*/    new ArcNil(),
-        /*E*/    new ArcEnd(0, 0),
+        /*8*/    new ArcNil(9),
+        /*E*/    new ArcEnd(),
         };
         term =new Arc[]{
         /*0*/    new ArcGraph(factor, 1, 0),
-        /*1*/    new ArcNil(),
+        /*1*/    new ArcNil(2),
         /*2*/    new ArcSymbol('*', 3, 4),
         /*3*/    new ArcGraph(factor, 1, 0),
         /*4*/    new ArcSymbol('/', 5, 6),
         /*5*/    new ArcGraph(factor, 1, 0),
-        /*6*/    new ArcNil(),
-        /*E*/    new ArcEnd(0,0)
+        /*6*/    new ArcNil(7),
+        /*E*/    new ArcEnd()
         };
         factor =new Arc[]{
         /*0*/    new ArcToken(lexer.new Token(2), 5, 1),
@@ -134,7 +137,7 @@ public class Parser extends Lexer{
         /*2*/    new ArcGraph(expression, 3, 0),
         /*3*/    new ArcSymbol(')', 5, 0),
         /*4*/    new ArcToken(lexer.new Token(3), 5, 0),
-        /*E*/    new ArcEnd(0, 0),
+        /*E*/    new ArcEnd(),
         };
         condition = new Arc[]{
         /*0*/    new ArcSymbol(137, 1, 2),
@@ -147,7 +150,7 @@ public class Parser extends Lexer{
         /*7*/    new ArcSymbol(129, 9, 8),
         /*8*/    new ArcSymbol(130, 9, 0),
         /*9*/    new ArcGraph(expression, 10, 0),
-        /*10*/   new ArcEnd(0, 0)
+        /*10*/   new ArcEnd()
         };
     }
     

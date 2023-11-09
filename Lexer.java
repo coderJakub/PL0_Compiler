@@ -118,6 +118,14 @@ public class Lexer{
             str="";
             sym=0;
         }
+        public Token(int t){
+            type=t;
+            posLine=0;
+            posCol=0;
+            num=0;
+            str="";
+            sym=0;
+        }
     }
 
     //Konstruktoren

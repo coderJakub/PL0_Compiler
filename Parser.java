@@ -1,10 +1,16 @@
 //import java.io.*;
 
 public class Parser extends Lexer{
-    Lexer lexer = new Lexer();
+    Lexer lexer;
+    Token t;
     public class Arc{
         int next;
         int alt;
+
+        Token token;
+        int sym;
+        Arc[] graph;
+        
         int action(){
             return -1; //-1->funtion doesnt exist
         }
@@ -23,21 +29,18 @@ public class Parser extends Lexer{
     }
     
     public class ArcSymbol extends Arc{
-        int sym;
         public ArcSymbol(int s, int n, int a){
             super(n,a);
             sym=s;
         }
     }
     public class ArcToken extends Arc{
-        Token token;
         public ArcToken(Token t, int n, int a){
             super(n,a);
             token=t;
         }
     }
     public class ArcGraph extends Arc{
-        Arc[] graph;
         public ArcGraph(Arc[] g, int n, int a){
             super(n,a);
             graph=g;
@@ -153,7 +156,29 @@ public class Parser extends Lexer{
         /*10*/   new ArcEnd()
         };
     }
-    
+    boolean parse(Arc graph[]){
+        int succ=0;
+        Arc bogen = graph[0];
+        if(t.type==0)lexer.Lex();
+        while(true){
+            switch (bogen.getClass().getName()) {
+                case "ArcNil":succ=1; break;
+                case "ArcSymbol":succ=(t.sym ==bogen.sym)?1:0; break;
+                case "ArcToken":succ=(t.type==bogen.token.type)?1:0; break;
+                case "ArcGraph":succ=parse(bogen.graph)?1:0; break;                
+                case "ArcEnd": return true;
+            }
+            succ = bogen.action();
+            if(succ==0){
+                if(bogen.alt!=0)bogen=graph[bogen.alt];
+                else return false;
+            }
+            else{
+                if(bogen.getClass().getName()=="ArcSymbol" || bogen.getClass().getName()=="ArcToken")t=lexer.Lex();
+                bogen=graph[bogen.next];
+            }
+        }
+    }
     public static void main(String args[]){
 
     }

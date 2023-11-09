@@ -1,0 +1,17 @@
+= Dokumentation des PL0-Compilers
+Jakub Kliemann <jakub.kliemann@stud.htw-dresden.de> 
+1.0, 01.09.2019 
+:toc: 
+:source-highlighter: rouge
+:imagesdir: images
+:toc-title: Inhaltsverzeichnis
+:xrefstyle: basic
+
+== 1. Lexer
+
+
+== 2. Parser
+=== 2.2 Implementation der Graphen
+
+.Graphenbeschriftung
+image::Parsergraphen.png[]

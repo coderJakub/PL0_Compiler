@@ -17,7 +17,7 @@ public class Parser extends Lexer{
         }
     }
     public class ArcNil extends Arc{
-        public Nil(int n){
+        public ArcNil(int n){
             super(n,0);
         }
     }

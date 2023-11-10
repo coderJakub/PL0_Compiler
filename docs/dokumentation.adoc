@@ -39,7 +39,7 @@ image::ZustandGraph.png[]
 
 * Die Funtionen Rufen jeweils die Grundfunktionen *l()*, *sl()* und *b()* auf
 . *l()* -> Liest in die globale Variable `_char x_` das nächste Zeichen des Files ein.
-. *sl()* -> Fügt in die globale Variable '_String buffer_' x ein und ruft dann l() auf.
+. *sl()* -> Fügt in die globale Variable `_String buffer_` x ein und ruft dann l() auf.
 . *b()* -> Legt je nachdem im welchen Zustand sich der Automat befindet, den Typ und Inhalt des Tokens fest. Es wird im Fall eines String zwischen Symbol (wie WHILE) und Bezeichner unterschieden, indem ein Array mit allen keywords untersucht wird
 
 === 1.3 Implementation der Tokenklasse

@@ -147,10 +147,12 @@ public class Lexer{
             System.out.println("Can't read "+f);
             return;
         }
+        t=new Token();
     }
 
     //Lexfunktion
     Token Lex(){
+        if(t.type==1 && t.sym=='.')return t; // -> Fragen wie das besser lösen
         state zx;
         t=new Token();
         buf=""; 

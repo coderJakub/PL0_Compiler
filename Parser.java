@@ -110,7 +110,7 @@ public class Parser extends Lexer{
         statement[12] = new ArcGraph(statement, 13, 0);
         statement[13] = new ArcSymbol(';', 12, 14);
         statement[14] = new ArcSymbol(135, 22, 0);
-        statement[15] = new ArcSymbol(131, 16, 17);
+        statement[15] = new ArcSymbol(132, 16, 17);
         statement[16] = new ArcToken(lexer.new Token(3), 22, 0);
         statement[17] = new ArcSymbol('?', 18, 19);
         statement[18] = new ArcToken(lexer.new Token(3), 22, 0);
@@ -193,7 +193,7 @@ public class Parser extends Lexer{
             succ = bogen.compareArc();
             if(bogen instanceof ArcEnd)return true;
             if(!succ){
-                //System.out.println("                           Suche nach Alternativbogen");
+            //    System.out.println("                           Suche nach Alternativbogen");
                 if(bogen.alt!=0)bogen=graph[bogen.alt];
                 else return false;
             }

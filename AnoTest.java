@@ -14,11 +14,7 @@ public class AnoTest{
     }
 
     public static void main(String[] args){
-        Ano2 k = new Ano2(2){
-            int func(){
-                return s;
-            }
-        };
+        Ano2 k = new Ano2(2);
         System.out.println("Ergebnis: "+k.func());
         System.out.println("Klasse: "+k.getClass().getName());
     }

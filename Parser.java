@@ -1,5 +1,7 @@
 //import java.io.*;
 
+import java.util.*;
+
 public class Parser extends Lexer{
     Lexer lexer;
     Token t;
@@ -10,6 +12,47 @@ public class Parser extends Lexer{
     Arc[] term=new Arc[8];
     Arc[] factor=new Arc[6];
     Arc[] condition=new Arc[11];
+    ArrayList<Integer> constBlock; 
+
+    public class Ident{
+        int prozNum;
+        String name;
+        public Ident(int n, String s){
+            prozNum =n;
+            name=s;
+        }
+    }
+    public class Variable extends Ident{
+        int address;
+        public Variable(String s, int n){
+            super(n,s);
+        }
+    }
+    public class Constant extends Ident{
+        int constIndex;
+        public Constant(int value, int n, String s){
+            super(n, s);
+            if(constBlock.contains(value)){
+                constIndex = constBlock.indexOf(value);
+            }
+            else{
+                constBlock.add(value);
+                constIndex = constBlock.indexOf(value);
+            }
+        }
+    }
+    public class Procedure extends Ident{
+        int procIndex;
+        Procedure parent;
+        LinkedList<Ident> namelist;
+        int varAdress;
+        public Procedure(Procedure p, String s){
+            super(p.procIndex, s);
+            parent =p;
+            namelist = new LinkedList<Ident>();
+            varAdress = 0;
+        }
+    }
 
     public abstract class Arc{
         int next;

@@ -15,21 +15,21 @@ public class Parser extends Lexer{
     ArrayList<Integer> constBlock; 
 
     public class Ident{
-        int prozNum;
-        String name;
+        int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
+        String name;  //Name der Variable
         public Ident(int n, String s){
             prozNum =n;
             name=s;
         }
     }
     public class Variable extends Ident{
-        int address;
+        int address; //Relativaddresse der Variable bzgl. Prozedur
         public Variable(String s, int n){
             super(n,s);
         }
     }
     public class Constant extends Ident{
-        int constIndex;
+        int constIndex; //Index der Konstante im Konstantenarray
         public Constant(int value, int n, String s){
             super(n, s);
             if(constBlock.contains(value)){
@@ -42,10 +42,10 @@ public class Parser extends Lexer{
         }
     }
     public class Procedure extends Ident{
-        int procIndex;
-        Procedure parent;
-        LinkedList<Ident> namelist;
-        int varAdress;
+        int procIndex; //Index der Procedure
+        Procedure parent; //parent Prozedur -> parent-proc.idx == procNum 
+        LinkedList<Ident> namelist; //Namensliste
+        int varAdress; //relativadresse für nächste Variable die hinzugefügt wird
         public Procedure(Procedure p, String s){
             super(p.procIndex, s);
             parent =p;

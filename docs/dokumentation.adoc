@@ -78,7 +78,40 @@ link:../LexerTest.java[]
 
 
 == 2. Parser
+
+=== 2.1 Erstellung der Bogen-Klassen
+
+* Die Hauptbogenklasse beinhaltet die Variblen `_int next_` und `_int alt_` welche den Index des Folge- bzw Alternativbogens speichert als auch `_Token token_`, `_int sym_` und `_Arc[] graph_`, für den Inhalt der jeweiligen Bögen.
+* Außerdem ist in der Hauptklasse die abstrakte Funktion `_compareArc()_`, welche untersucht ob der Bogen mit dem nächsten Token übereinstimmt, und die Funktion `_action()_`, welche den Bogen ausführt, definiert.
+** `_action()_` wird dann in Bogendefinitionen zur Codegenerierung überschrieben
+* Die Bogenklassen ArcNil, ArcEnd, ArcSym, ArcToken und ArcGraph werden nun von der Basiskasse abgeleitet
+* Implemetierung der `_compareArc()_` Funktionen
+** ArcNil -> wird nur `_action()_` aufgerufen
+** ArcEnd -> wird immer true zurückgegeben
+** ArcSym -> es wird der Inhalt vom Inhalt des aktuellen Tokens mit dem Symbol des Bogen verglichen und `_action()_` aufgerufen
+** ArcToken -> es wird der Typ des aktuellen Tokens mit dem Token des Bogen verglichen und `_action()_` aufgerufen
+** ArcGraph -> es wird `_parse()_` mit dem Graphen des Bogens aufgerufen und `_action()_` aufgerufen
+
 === 2.2 Implementation der Graphen
+
+* Die Graphen werden als Array von Bögen definiert
+* Die Bögen werden in der Reihenfolge nach der Skizze der Graphen definiert
 
 .Graphenbeschriftung
 image::Parsergraphen.png[]
+
+
+=== 2.3 Implementierung der parse()-Funktion
+
+* Die `_parse()_`-Funktion wird mit einem Graphen aufgerufen
+* Zuerst wird der erste Bogen des Graphen in `_Arc Bogen_` gespeichert
+* Wenn noch kein Token vorhanden ist, wird die Lex-Funktion aufgerufen
+* Dann wird eine while-Schleife durchlaufen, welche solange läuft, bis der Endbogen erreicht wurde oder ein Fehler vorliegt
+** Zuerst wird die `_compareArc()_` Funktion des Bogens aufgerufen
+*** Wenn diese true zurückgibt, wird ein neues Token geladen (falls eins verwendet wurde) und der nächste Bogen in `_Bogen_` gespeichert
+*** Wenn diese false zurückgibt, wird der Alternativbogen in `_Bogen_` gespeichert. Gibt es keine Alternativbögen mehr liefert `_parse()_` false zurück.
+** Wenn der Endbogen erreicht wurde, wird die Schleife beendet
+
+== 3. Namensliste
+
+=== 3.1 Erstellung der Klassen

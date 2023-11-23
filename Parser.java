@@ -13,17 +13,18 @@ public class Parser extends Lexer{
     Arc[] factor=new Arc[6];
     Arc[] condition=new Arc[11];
     ArrayList<Long> constBlock; 
-    Procedure mainProc;
+    static Procedure mainProc;
     Procedure currentProc;
     String nameOfLastIndent;
 
-    public class Ident{
+    abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
         String name;  //Name der Variable
         public Ident(String s){
             prozNum =(currentProc==null)?0:currentProc.procIndex;
             name=s;
         }
+        abstract LinkedList<Ident> getNameList();
     }
 
     public class Variable extends Ident{
@@ -33,6 +34,9 @@ public class Parser extends Lexer{
             address = currentProc.varAdress;
             currentProc.varAdress+=4;
             currentProc.namelist.add(this);
+        }
+        LinkedList<Ident> getNameList(){
+            return null;
         }
     }
 
@@ -48,6 +52,9 @@ public class Parser extends Lexer{
             }
             currentProc.namelist.add(this);
         }
+        LinkedList<Ident> getNameList(){
+            return null;
+        }
     }
 
     public class Procedure extends Ident{
@@ -59,6 +66,10 @@ public class Parser extends Lexer{
             super(s);
             namelist = new LinkedList<Ident>();
             varAdress = 0;
+            if(currentProc!=null)currentProc.namelist.add(this);
+        }
+        LinkedList<Ident> getNameList(){
+            return namelist;
         }
     }
 
@@ -161,6 +172,7 @@ public class Parser extends Lexer{
         currentProc = new Procedure("main");
         mainProc=currentProc;
         lexer = new Lexer(filename);
+        constBlock = new ArrayList<Long>();
         t=new Token();
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3){boolean action(){System.out.println("Enter Statement");return true;}};
         statement[1] = new ArcSymbol(128, 2, 0);
@@ -288,8 +300,34 @@ public class Parser extends Lexer{
             }
         }
     }
+    int i=0;
+
+    void printVersatz(){
+            for(int j=0; j<i; j++)System.out.print(" ");
+    }
+    String identClass(Ident id){
+        if(id instanceof Procedure)return "Procedure";
+        if(id instanceof Variable)return "Variable";
+        if(id instanceof Constant)return "Constant";
+        else return "Ident";
+
+    }
+    void printNamelist(LinkedList<Ident> namelist){
+        int j=0;
+        for(int k=0; k<namelist.size(); k++){
+            printVersatz(); System.out.println(j+ ": "+ identClass(namelist.get(k))+ " - "+ namelist.get(k).name);
+            if(namelist.get(k) instanceof Procedure){
+                i++;
+                printNamelist(namelist.get(k).getNameList());
+                i--;
+            }
+            j++;
+        }
+    }
+
     public static void main(String args[]){
         Parser parser = new Parser(args[0]);
         System.out.println(parser.parse(parser.program));
+        parser.printNamelist(mainProc.namelist);
     }
 }

@@ -12,10 +12,12 @@ public class Parser extends Lexer{
     Arc[] term=new Arc[8];
     Arc[] factor=new Arc[6];
     Arc[] condition=new Arc[11];
+
     ArrayList<Long> constBlock; 
     static Procedure mainProc;
     Procedure currentProc;
     String nameOfLastIndent;
+    int nextProcNum=0;
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -24,7 +26,7 @@ public class Parser extends Lexer{
             prozNum =(currentProc==null)?0:currentProc.procIndex;
             name=s;
         }
-        abstract LinkedList<Ident> getNameList();
+        abstract LinkedList<Ident> getNameList(); //->nur fürs debuggen
     }
 
     public class Variable extends Ident{
@@ -58,7 +60,7 @@ public class Parser extends Lexer{
     }
 
     public class Procedure extends Ident{
-        int procIndex=0; //Index der Procedure
+        int procIndex; //Index der Procedure
         Procedure parent; //parent Prozedur -> parent-proc.idx == procNum 
         LinkedList<Ident> namelist; //Namensliste
         int varAdress; //relativadresse für nächste Variable die hinzugefügt wird
@@ -67,6 +69,8 @@ public class Parser extends Lexer{
             namelist = new LinkedList<Ident>();
             varAdress = 0;
             if(currentProc!=null)currentProc.namelist.add(this);
+            parent = currentProc!=null?currentProc:null;
+            procIndex = nextProcNum++;
         }
         LinkedList<Ident> getNameList(){
             return namelist;
@@ -170,11 +174,12 @@ public class Parser extends Lexer{
     
     public Parser(String filename){
         currentProc = new Procedure("main");
-        mainProc=currentProc;
+        mainProc=currentProc; //->nur fürs debuggen
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
-        statement[0] = new ArcToken(lexer.new Token(3), 1, 3){boolean action(){System.out.println("Enter Statement");return true;}};
+
+        statement[0] = new ArcToken(lexer.new Token(3), 1, 3);
         statement[1] = new ArcSymbol(128, 2, 0);
         statement[2] = new ArcGraph(expression, 22, 0);
         statement[3] = new ArcSymbol(136, 4, 7);
@@ -196,9 +201,9 @@ public class Parser extends Lexer{
         statement[19] = new ArcSymbol('!', 20, 21);
         statement[20] = new ArcGraph(expression, 22, 21);
         statement[21] = new ArcNil(22);
-        statement[22] = new ArcEnd(){boolean action(){System.out.println("Exit Statement");return true;}};
+        statement[22] = new ArcEnd();
 
-        block[0] = new ArcSymbol(133, 1, 6) { boolean action() { System.out.println("Enter Block"); return true; } };
+        block[0] = new ArcSymbol(133, 1, 6);
         block[1] = new ArcToken(lexer.new Token(3), 2, 0){boolean action(){
             if(searchIdent(currentProc, t.str)!=null)return false;
             nameOfLastIndent=t.str;
@@ -230,18 +235,19 @@ public class Parser extends Lexer{
         block[14] = new ArcSymbol(';', 15, 0);
         block[15] = new ArcGraph(block, 16, 0);
         block[16] = new ArcSymbol(';', 12, 0){boolean action(){
+            currentProc.namelist.clear();
             currentProc = currentProc.parent;
             return true;
         }};
         block[17] = new ArcNil(18);
         block[18] = new ArcGraph(statement, 19, 0);
-        block[19] = new ArcEnd() { boolean action() { System.out.println("Exit Block"); return true; } };
+        block[19] = new ArcEnd();
         
-        program[0] = new ArcGraph(block, 1, 0) { boolean action() { System.out.println("Enter Program"); return true; } };
+        program[0] = new ArcGraph(block, 1, 0);
         program[1] = new ArcSymbol('.', 2, 0);
-        program[2] = new ArcEnd() { boolean action() { System.out.println("Exit Program"); return true; } };
+        program[2] = new ArcEnd();
         
-        expression[0] = new ArcSymbol('-', 1, 2) { boolean action() { System.out.println("Enter Expression"); return true; } };
+        expression[0] = new ArcSymbol('-', 1, 2);
         expression[1] = new ArcGraph(term, 3, 0);
         expression[2] = new ArcGraph(term, 3, 0);
         expression[3] = new ArcNil(4);
@@ -250,25 +256,25 @@ public class Parser extends Lexer{
         expression[6] = new ArcGraph(term, 3, 0);
         expression[7] = new ArcGraph(term, 3, 0);
         expression[8] = new ArcNil(9);
-        expression[9] = new ArcEnd() { boolean action() { System.out.println("Exit Expression"); return true; } };
+        expression[9] = new ArcEnd();
         
-        term[0] = new ArcGraph(factor, 1, 0) { boolean action() { System.out.println("Enter Term"); return true; } };
+        term[0] = new ArcGraph(factor, 1, 0);
         term[1] = new ArcNil(2);
         term[2] = new ArcSymbol('*', 3, 4);
         term[3] = new ArcGraph(factor, 1, 0);
         term[4] = new ArcSymbol('/', 5, 6);
         term[5] = new ArcGraph(factor, 1, 0);
         term[6] = new ArcNil(7);
-        term[7] = new ArcEnd() { boolean action() { System.out.println("Exit Term"); return true; } };
+        term[7] = new ArcEnd();
         
-        factor[0] = new ArcToken(lexer.new Token(2), 5, 1) { boolean action() { System.out.println("Enter Factor"); return true; } };
+        factor[0] = new ArcToken(lexer.new Token(2), 5, 1);
         factor[1] = new ArcSymbol('(', 2, 4);
         factor[2] = new ArcGraph(expression, 3, 0);
         factor[3] = new ArcSymbol(')', 5, 0);
         factor[4] = new ArcToken(lexer.new Token(3), 5, 0);
-        factor[5] = new ArcEnd() { boolean action() { System.out.println("Exit Factor"); return true; } };
+        factor[5] = new ArcEnd();
         
-        condition[0] = new ArcSymbol(137, 1, 2) { boolean action() { System.out.println("Enter Condition"); return true; } };
+        condition[0] = new ArcSymbol(137, 1, 2);
         condition[1] = new ArcGraph(expression, 10, 0);
         condition[2] = new ArcGraph(expression, 3, 0);
         condition[3] = new ArcSymbol('=', 9, 4);
@@ -278,7 +284,7 @@ public class Parser extends Lexer{
         condition[7] = new ArcSymbol(129, 9, 8);
         condition[8] = new ArcSymbol(130, 9, 0);
         condition[9] = new ArcGraph(expression, 10, 0);
-        condition[10] = new ArcEnd(){ boolean action() { System.out.println("Exit Condition"); return true; } };        
+        condition[10] = new ArcEnd();   
     }
     boolean parse(Arc graph[]){
         boolean succ=false;
@@ -328,6 +334,7 @@ public class Parser extends Lexer{
     public static void main(String args[]){
         Parser parser = new Parser(args[0]);
         System.out.println(parser.parse(parser.program));
-        parser.printNamelist(mainProc.namelist);
+        //parser.printNamelist(mainProc.namelist); //--> show namelists (debug)
+        //for(Long i:parser.constBlock)System.out.println(i); --> show constBlock (debug)
     }
 }

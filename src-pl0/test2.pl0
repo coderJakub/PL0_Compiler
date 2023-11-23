@@ -1,7 +1,7 @@
 var a,fac;
 
 Procedure p1;
- const A=0;
+ const A=2;
  var b,c;
  Procedure p2;
  var b;

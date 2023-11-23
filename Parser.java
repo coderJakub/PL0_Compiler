@@ -12,46 +12,68 @@ public class Parser extends Lexer{
     Arc[] term=new Arc[8];
     Arc[] factor=new Arc[6];
     Arc[] condition=new Arc[11];
-    ArrayList<Integer> constBlock; 
+    ArrayList<Long> constBlock; 
+    Procedure mainProc;
+    Procedure currentProc;
+    String nameOfLastIndent;
 
     public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
         String name;  //Name der Variable
-        public Ident(int n, String s){
-            prozNum =n;
+        public Ident(String s){
+            prozNum =(currentProc==null)?0:currentProc.procIndex;
             name=s;
         }
     }
+
     public class Variable extends Ident{
         int address; //Relativaddresse der Variable bzgl. Prozedur
-        public Variable(String s, int n){
-            super(n,s);
+        public Variable(String s){
+            super(s);
+            address = currentProc.varAdress;
+            currentProc.varAdress+=4;
+            currentProc.namelist.add(this);
         }
     }
+
     public class Constant extends Ident{
         int constIndex; //Index der Konstante im Konstantenarray
-        public Constant(int value, int n, String s){
-            super(n, s);
-            if(constBlock.contains(value)){
+        public Constant(long value, String s){
+            super(s);
+            if(constBlock.contains(value))
                 constIndex = constBlock.indexOf(value);
-            }
             else{
                 constBlock.add(value);
                 constIndex = constBlock.indexOf(value);
             }
+            currentProc.namelist.add(this);
         }
     }
+
     public class Procedure extends Ident{
-        int procIndex; //Index der Procedure
+        int procIndex=0; //Index der Procedure
         Procedure parent; //parent Prozedur -> parent-proc.idx == procNum 
         LinkedList<Ident> namelist; //Namensliste
         int varAdress; //relativadresse für nächste Variable die hinzugefügt wird
-        public Procedure(Procedure p, String s){
-            super(p.procIndex, s);
-            parent =p;
+        public Procedure(String s){
+            super(s);
             namelist = new LinkedList<Ident>();
             varAdress = 0;
         }
+    }
+
+    Ident searchIdent(Procedure p, String name){
+        for(Ident i:p.namelist)if(i.name.equals(name))return i;
+        return null;
+    }
+    Ident searchIdentGlobal(String name){
+        Procedure p = currentProc;
+        do{
+            Ident i = searchIdent(p, name);
+            if(i!=null)return i;
+            p=p.parent;
+        }while(p.procIndex==0);
+        return null;
     }
 
     public abstract class Arc{
@@ -63,7 +85,7 @@ public class Parser extends Lexer{
         Arc[] graph;
         
         boolean action(){
-            return true; //-1->funtion doesnt exist
+            return true; //true->funtion doesnt exist
         }
         public Arc(){
             next=alt=0;
@@ -136,6 +158,8 @@ public class Parser extends Lexer{
     }
     
     public Parser(String filename){
+        currentProc = new Procedure("main");
+        mainProc=currentProc;
         lexer = new Lexer(filename);
         t=new Token();
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3){boolean action(){System.out.println("Enter Statement");return true;}};
@@ -163,22 +187,40 @@ public class Parser extends Lexer{
         statement[22] = new ArcEnd(){boolean action(){System.out.println("Exit Statement");return true;}};
 
         block[0] = new ArcSymbol(133, 1, 6) { boolean action() { System.out.println("Enter Block"); return true; } };
-        block[1] = new ArcToken(lexer.new Token(3), 2, 0);
+        block[1] = new ArcToken(lexer.new Token(3), 2, 0){boolean action(){
+            if(searchIdent(currentProc, t.str)!=null)return false;
+            nameOfLastIndent=t.str;
+            return true;
+        }};
         block[2] = new ArcSymbol('=', 3, 0);
-        block[3] = new ArcToken(lexer.new Token(2), 4, 0);
+        block[3] = new ArcToken(lexer.new Token(2), 4, 0){boolean action(){
+            new Constant(t.num, nameOfLastIndent);
+            return true;
+        }};
         block[4] = new ArcSymbol(',', 1, 5);
         block[5] = new ArcSymbol(';', 7, 0);
         block[6] = new ArcNil(7);
         block[7] = new ArcSymbol(140, 8, 11);
-        block[8] = new ArcToken(lexer.new Token(3), 9, 0);
+        block[8] = new ArcToken(lexer.new Token(3), 9, 0){boolean action(){
+            if(searchIdent(currentProc, t.str)!=null)return false;
+            new Variable(t.str);
+            return true;
+        }};
         block[9] = new ArcSymbol(',', 8, 10);
         block[10] = new ArcSymbol(';', 12, 0);
         block[11] = new ArcNil(12);
         block[12] = new ArcSymbol(138, 13, 17);
-        block[13] = new ArcToken(lexer.new Token(3), 14, 0);
+        block[13] = new ArcToken(lexer.new Token(3), 14, 0){boolean action(){
+            if(searchIdent(currentProc, t.str)!=null)return false;
+            currentProc = new Procedure(t.str);
+            return true;
+        }};
         block[14] = new ArcSymbol(';', 15, 0);
         block[15] = new ArcGraph(block, 16, 0);
-        block[16] = new ArcSymbol(';', 12, 0);
+        block[16] = new ArcSymbol(';', 12, 0){boolean action(){
+            currentProc = currentProc.parent;
+            return true;
+        }};
         block[17] = new ArcNil(18);
         block[18] = new ArcGraph(statement, 19, 0);
         block[19] = new ArcEnd() { boolean action() { System.out.println("Exit Block"); return true; } };

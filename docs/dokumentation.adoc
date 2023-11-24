@@ -123,11 +123,19 @@ image::Parsergraphen.png[]
 ** Procedure - speichert den seinen procIdx, einen Zeiger auf die parent-proc, seine Namensliste und die relativaddresse für nächste Varibel
 * als Namensliste wird jeweils eine `_LinkedList<Ident>_` angelegt (beinhaltet Daten des Typs Ident)
 * als Constant_Block wird eine `_ArrayList<Long>_` angelegt, wobei jeder Wert nur einmal gespeichert wird!!
+* in `_Procedure currentProc_` wird die aktuelle Prozedur gespeichert
 
 === 3.2 Ausprogrammierung der benötigten Funktionen
 
-
+* die jeweiligen Konstruktoren leiten durch `_super(name)_` den Namen an den Ident-Konstruktor weiter der in `_int procNum_` den Index der aktuellen Prozedur hinterlegt, danach werden eigene Attribute befüllt und das Objekt in die Namensliste eingefügt
+* zusätzlich gibt es noch die Funktionen `_Ident searchIdent()_` und `_Ident searchIdentGlobal()_`
+** lokale Suche - untersucht für die gegebene Prozedur die Namensliste und gleicht die Namen der Bezeichner mit dem gegeben Name ab, bei einem Treffer wird Zeiger auf bezeichner zurückgeliefert; sonst null
+** globale Suche - ruft zuerst für aktuelle Prozedur `_searchIdent()_` auf und bei keinem Treffer rekursiv für die umgebene Prozedur, bis Ident gefunden wurde oder man sich in der main-Prozedur befinden und keine Parent Prozedur mehr existiert
 
 === 3.3 Einarbeitung der Funktionen
 
+Benötigte Funktionen zum Aufbau der Namesliste
+
+.Funktionseinbidung Namensliste
+image::Block-namelist-func.png[]
 // hier dann Graphen mit Aktionen für Namensliste

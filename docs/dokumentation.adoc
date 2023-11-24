@@ -115,3 +115,19 @@ image::Parsergraphen.png[]
 == 3. Namensliste
 
 === 3.1 Erstellung der Klassen
+
+* Die Hauptklasse ident beinhaltet die Variablen `_String name_` und `_int procNum_` (Index der übergeordneten Procedure)
+* aus Ident sind die Klassen Constant, Variable und Procedure abgeleitet
+** Constant - speichert den Index, an welcher Stelle sich der Wert im Constant-Block befindet
+** Variable - speichert die Relativaddresse (fängt für jede Procedure bei 0 an)
+** Procedure - speichert den seinen procIdx, einen Zeiger auf die parent-proc, seine Namensliste und die relativaddresse für nächste Varibel
+* als Namensliste wird jeweils eine `_LinkedList<Ident>_` angelegt (beinhaltet Daten des Typs Ident)
+* als Constant_Block wird eine `_ArrayList<Long>_` angelegt, wobei jeder Wert nur einmal gespeichert wird!!
+
+=== 3.2 Ausprogrammierung der benötigten Funktionen
+
+
+
+=== 3.3 Einarbeitung der Funktionen
+
+// hier dann Graphen mit Aktionen für Namensliste

@@ -138,4 +138,37 @@ Benötigte Funktionen zum Aufbau der Namesliste
 
 .Funktionseinbidung Namensliste
 image::Block-namelist-func.png[]
+
+*bl1:*
+
+* das aktuelle Token beinhaltet den Namen einer neuen Kostante
+* Überprüfung ob Name schon in aktueller Namesliste vorhanden
+** wenn ja -> Fehlermeldung
+** wenn nein -> Name wird in `_String nameOfLastIdent_`
+
+*bl2:*
+
+* das aktuelle Token beinhaltet die Zahl der neuen Kostante
+* Konstruktor von Constant wird aufgerufen mit Zahl aus Token und String aus `_String nameOfLastIdent_`
+
+*bl3:*
+
+* das aktuelle Token beinhaltet den Namen einer neuen Variable
+* Überprüfung ob Name schon in aktueller Namesliste vorhanden
+** wenn ja -> Fehlermeldung
+** wenn nein -> Konstruktor von Variable wird aufgerufen mit String aus Token
+
+*bl4:*
+
+* das aktuelle Token beinhaltet den Namen einer neuen Prozedur
+* Überprüfung ob Name schon in aktueller Namesliste vorhanden
+** wenn ja -> Fehlermeldung
+** wenn nein -> Konstruktor von Procedure wird aufgerufen mit String aus Token und Ergebnis wird in `_Procedure currentProc_` gespeichert
+
+*bl5:*
+
+* der Parser befindet sich am Ende einer Procedure
+* es soll die Parent Procedure von `_Procedure currentProc_` als aktuelle Prozedur gesetzt werden und die Namesliste der verlassenen Funktion soll gelöscht werden
+
+Bei allen Funktionen wird bei keinem Fehler true zurückgegeben und somit wird die `_compareArc()_` Funktion als true ausgewertet
 // hier dann Graphen mit Aktionen für Namensliste

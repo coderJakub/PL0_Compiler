@@ -18,6 +18,8 @@ public class Parser extends Lexer{
     Procedure currentProc;
     String nameOfLastIndent;
     int procCounter=0;
+    
+    String code;
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -90,6 +92,40 @@ public class Parser extends Lexer{
         }while(p.procIndex==0);
         return null;
     }
+    public void writeArg(int... arg){
+        for(int i:arg){
+            code+=i%0x100;
+            code+=i/0x100;
+        }
+            
+    }
+    public String replaceAt(String s, int pos, String c) {
+        return s.substring(0, pos) + c + s.substring(pos + c.length());
+    }
+
+    public void genCode(String command, int... args){
+        if(args.length>3)System.exit(-1);
+        code=command;
+        try{
+            switch (command) {
+                case "entryProc": writeArg(args[0],args[1], args[2]); break;
+                case "puValVrGlob": 
+                case "puAdrVrGlob": writeArg(args[0], args[1]); break;
+                case "puValVrMain": 
+                case "puAdrVrMain":  
+                case "puValVrLocl": 
+                case "puAdrVrLocl":
+                case "puConst":
+                case "jmp" : 
+                case "jnot":
+                case "call":writeArg(args[0]); break;
+                default: break;
+            }
+        }catch(Exception e){
+            System.out.println("Fehler beim generieren des Codes: Anzahl Parameter stimmt nicht überein!");
+            System.exit(-1);
+        }
+    }
 
     public abstract class Arc{
         int next;
@@ -130,7 +166,7 @@ public class Parser extends Lexer{
             sym=s;
         }
         boolean compareArc(){
-            return action()&&t.sym==sym /*&& action() eigentlich anders rum!!*/;
+            return t.sym==sym&&action() /*&& action() eigentlich anders rum!!*/;
         }
         String debug(){
             return "ArcSymbol: "+sym;
@@ -142,7 +178,7 @@ public class Parser extends Lexer{
             token=t;
         }
         boolean compareArc(){
-            return action()&&t.type==token.type/*&& action() eigentlich anders rum!!*/;
+            return t.type==token.type&&action();
         }
         String debug(){
             return "ArcToken: "+token.type;
@@ -154,7 +190,7 @@ public class Parser extends Lexer{
             graph=g;
         }
         boolean compareArc(){
-            return action() && parse(graph) /*&& action() eigentlich anders rum!!*/;
+            return parse(graph)&&action();
         }
         String debug(){
             return "ArcGraph";
@@ -165,7 +201,7 @@ public class Parser extends Lexer{
             super(0,0);
         }
         boolean compareArc(){
-            return action() /*Eigentlich nur true!! */;
+            return true;
         }
         String debug(){
             return "ArcEnd";
@@ -234,13 +270,19 @@ public class Parser extends Lexer{
         }};
         block[14] = new ArcSymbol(';', 15, 0);
         block[15] = new ArcGraph(block, 16, 0);
-        block[16] = new ArcSymbol(';', 12, 0){boolean action(){
+        block[16] = new ArcSymbol(';', 12, 0);
+        block[17] = new ArcNil(18){boolean action(){
+            code="";
+            genCode("entryproc", 0, currentProc.procIndex, currentProc.varAdress);
+            return true;
+        }};
+        block[18] = new ArcGraph(statement, 19, 0){boolean action(){
+            genCode("retProc");
+            code=replaceAt(code, 9, ""+code.length());
             currentProc.namelist.clear();
             currentProc = currentProc.parent;
             return true;
         }};
-        block[17] = new ArcNil(18);
-        block[18] = new ArcGraph(statement, 19, 0);
         block[19] = new ArcEnd();
         
         program[0] = new ArcGraph(block, 1, 0);

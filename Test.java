@@ -9,6 +9,11 @@ public class Test {
         code = replaceAt(code, pos, c);
     }
     public static void main(String args[]){
+        String a = "as";
+        switch(a){
+            case "as": System.out.println("lol"); break;
+            default: System.out.println("s");break;
+        }
         func(2, "as");
         System.out.println(code);
     }

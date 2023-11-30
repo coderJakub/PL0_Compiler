@@ -1,4 +1,4 @@
-//import java.io.*;
+import java.io.*;
 
 import java.util.*;
 
@@ -20,6 +20,8 @@ public class Parser extends Lexer{
     int procCounter=0;
     
     String code;
+
+    File outFile;
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -94,8 +96,8 @@ public class Parser extends Lexer{
     }
     public void writeArg(int... arg){
         for(int i:arg){
-            code+=i%0x100;
-            code+=i/0x100;
+            code+=i%0x100; System.out.println(i%0x100);
+            code+=i/0x100; System.out.println(i/0x100);
         }
             
     }
@@ -105,10 +107,10 @@ public class Parser extends Lexer{
 
     public void genCode(String command, int... args){
         if(args.length>3)System.exit(-1);
-        code=command;
+        code+=command;
         try{
             switch (command) {
-                case "entryProc": writeArg(args[0],args[1], args[2]); break;
+                case "entryProc": writeArg(args[0],args[1], args[2]); System.out.println("he");break;
                 case "puValVrGlob": 
                 case "puAdrVrGlob": writeArg(args[0], args[1]); break;
                 case "puValVrMain": 
@@ -119,14 +121,22 @@ public class Parser extends Lexer{
                 case "jmp" : 
                 case "jnot":
                 case "call":writeArg(args[0]); break;
-                default: break;
+                default: System.out.println(command);break;
             }
         }catch(Exception e){
             System.out.println("Fehler beim generieren des Codes: Anzahl Parameter stimmt nicht überein!");
             System.exit(-1);
         }
     }
-
+    public void writeCodeInFile(){
+        try {
+            FileOutputStream fos = new FileOutputStream(outFile.getName());
+            fos.write(code.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public abstract class Arc{
         int next;
         int alt;
@@ -214,6 +224,16 @@ public class Parser extends Lexer{
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
+        outFile = new File(filename+".o");
+        try {
+            if (outFile.createNewFile()) {
+                System.out.println("Datei wurde erstellt: " + outFile.getName());
+            } else {
+                System.out.println("Die Datei existiert bereits.");
+            }
+        } catch (IOException e) {
+            System.out.println("Fehler beim Erstellen der Datei: " + e.getMessage());
+        }
 
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3);
         statement[1] = new ArcSymbol(128, 2, 0);
@@ -273,12 +293,13 @@ public class Parser extends Lexer{
         block[16] = new ArcSymbol(';', 12, 0);
         block[17] = new ArcNil(18){boolean action(){
             code="";
-            genCode("entryproc", 0, currentProc.procIndex, currentProc.varAdress);
+            genCode("entryProc", 0, currentProc.procIndex, currentProc.varAdress);
             return true;
         }};
         block[18] = new ArcGraph(statement, 19, 0){boolean action(){
             genCode("retProc");
             code=replaceAt(code, 9, ""+code.length());
+            writeCodeInFile();
             currentProc.namelist.clear();
             currentProc = currentProc.parent;
             return true;

@@ -8,6 +8,8 @@ public class Lexer{
     Token t;
     int state;
     String[] keywords = {"BEGIN", "CALL", "CONST", "DO", "END", "IF", "ODD", "PROCEDURE", "THEN", "VAR", "WHILE"};
+    int posLine=0;
+    int posCol=0;
 
     //Definieren der Zeichenklassen für kleinere Automatentabelle
     // 0:Sonderzeichen, 1: Ziffer, 2:Buchstabe 3: : 4: = 5: < 6: > 7: sonstige Steuerzeichen 
@@ -163,6 +165,7 @@ public class Lexer{
             zx.func();
             state= zx.nextS;
         }while(zx.nextS!=9);
+        t.posCol=posCol; t.posLine=posLine;
         return t;
     }
 
@@ -174,6 +177,11 @@ public class Lexer{
         catch(Exception e){
             System.out.println("Can't read "+f);
             return;
+        }
+        posLine++;
+        if(x=='\n'){
+            posCol++;
+            posLine=0;
         }
     }
     void sl(){

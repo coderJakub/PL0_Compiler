@@ -17,7 +17,7 @@ public class Parser extends Lexer{
     static Procedure mainProc;
     Procedure currentProc;
     String nameOfLastIndent;
-    int nextProcNum=0;
+    int procCounter=0;
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -68,9 +68,9 @@ public class Parser extends Lexer{
             super(s);
             namelist = new LinkedList<Ident>();
             varAdress = 0;
-            if(currentProc!=null)currentProc.namelist.add(this);
+            if(currentProc!=null)currentProc.namelist.add(this); //Fall Erstellung main-Proc
             parent = currentProc!=null?currentProc:null;
-            procIndex = nextProcNum++;
+            procIndex = procCounter++;
         }
         LinkedList<Ident> getNameList(){
             return namelist;
@@ -333,7 +333,8 @@ public class Parser extends Lexer{
 
     public static void main(String args[]){
         Parser parser = new Parser(args[0]);
-        System.out.println(parser.parse(parser.program));
+        if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
+        else System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
         //parser.printNamelist(mainProc.namelist); //--> show namelists (debug)
         //for(Long i:parser.constBlock)System.out.println(i); --> show constBlock (debug)
     }

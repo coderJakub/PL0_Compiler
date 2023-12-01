@@ -225,15 +225,15 @@ public class Parser extends Lexer{
         constBlock = new ArrayList<Long>();
         t=new Token();
         outFile = new File(filename+".o");
-        try {
-            if (outFile.createNewFile()) {
-                System.out.println("Datei wurde erstellt: " + outFile.getName());
-            } else {
-                System.out.println("Die Datei existiert bereits.");
-            }
-        } catch (IOException e) {
-            System.out.println("Fehler beim Erstellen der Datei: " + e.getMessage());
-        }
+        // try {
+        //     if (outFile.createNewFile()) {
+        //         System.out.println("Datei wurde erstellt: " + outFile.getName());
+        //     } else {
+        //         System.out.println("Die Datei existiert bereits.");
+        //     }
+        // } catch (IOException e) {
+        //     System.out.println("Fehler beim Erstellen der Datei: " + e.getMessage());
+        // }
 
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3);
         statement[1] = new ArcSymbol(128, 2, 0);

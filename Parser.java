@@ -224,7 +224,7 @@ public class Parser extends Lexer{
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
-        outFile = new File(filename+".o");
+        outFile = new File(filename.split('.')[0]+".o");
         // try {
         //     if (outFile.createNewFile()) {
         //         System.out.println("Datei wurde erstellt: " + outFile.getName());

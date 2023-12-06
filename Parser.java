@@ -22,6 +22,7 @@ public class Parser extends Lexer{
     String code;
 
     File outFile;
+    FileOutputStream fos;
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -130,9 +131,7 @@ public class Parser extends Lexer{
     }
     public void writeCodeInFile(){
         try {
-            FileOutputStream fos = new FileOutputStream(outFile.getName());
             fos.write(code.getBytes());
-            fos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -224,7 +223,13 @@ public class Parser extends Lexer{
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
-        outFile = new File(filename.split('.')[0]+".o");
+        outFile = new File(filename.split(".pl0")[0]+".o");
+        try{
+            fos = new FileOutputStream(outFile.getName());
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+            System.exit(-1);
+        }
         // try {
         //     if (outFile.createNewFile()) {
         //         System.out.println("Datei wurde erstellt: " + outFile.getName());
@@ -394,10 +399,11 @@ public class Parser extends Lexer{
         }
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) throws IOException{
         Parser parser = new Parser(args[0]);
         if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
         else System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
+        parser.fos.close();
         //parser.printNamelist(mainProc.namelist); //--> show namelists (debug)
         //for(Long i:parser.constBlock)System.out.println(i); --> show constBlock (debug)
     }

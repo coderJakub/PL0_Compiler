@@ -19,10 +19,17 @@ public class Parser extends Lexer{
     String nameOfLastIndent;
     int procCounter=0;
     
-    String code;
+    byte[] code;
+    int idxCode;
+    ByteArrayOutputStream baos;
+    DataOutputStream dos;
 
     File outFile;
     FileOutputStream fos;
+
+/************************************************************************************/
+/*********************Definition der Namenslisten-Klassen****************************/
+/************************************************************************************/
 
     abstract public class Ident{
         int prozNum;  //Nummer der Prozedur zu welcher Variable gehört
@@ -95,25 +102,70 @@ public class Parser extends Lexer{
         }while(p.procIndex==0);
         return null;
     }
-    public void writeArg(int... arg){
-        for(int i:arg){
-            code+=i%0x100; System.out.println(i%0x100);
-            code+=i/0x100; System.out.println(i/0x100);
+
+/************************************************************************************/
+/*************************Funktionen der Codegenerierung*****************************/
+/************************************************************************************/
+    public void writeShortToByteArray(short value) {
+        baos.write((value >> 8) & 0xFF);
+        baos.write(value & 0xFF);
+    }
+    public void writeCommand(String command){
+        switch (command) {
+            case "puValVrLocl": writeShortToByteArray((short)0x00); break;
+            case "puValVrMain": writeShortToByteArray((short)0x01); break;
+            case "puValVrGlob": writeShortToByteArray((short)0x02); break;
+            case "puAdrVrLocl": writeShortToByteArray((short)0x03); break;
+            case "puAdrVrMain": writeShortToByteArray((short)0x04); break;
+            case "puAdrVrGlob": writeShortToByteArray((short)0x05); break;
+            case "puConst":     writeShortToByteArray((short)0x06); break;
+            case "storeVal":    writeShortToByteArray((short)0x07); break;
+            case "putVal":      writeShortToByteArray((short)0x08); break;
+            case "getVal":      writeShortToByteArray((short)0x09); break;
+            case "vzMinus":     writeShortToByteArray((short)0x0A); break;
+            case "odd":         writeShortToByteArray((short)0x0B); break;
+            case "OpAdd":       writeShortToByteArray((short)0x0C); break;
+            case "OpSub":       writeShortToByteArray((short)0x0D); break;
+            case "OpMult":      writeShortToByteArray((short)0x0E); break;
+            case "OpDiv":       writeShortToByteArray((short)0x0F); break;
+            case "cmpEQ":       writeShortToByteArray((short)0x10); break;
+            case "cmpNE":       writeShortToByteArray((short)0x11); break;
+            case "cmpLT":       writeShortToByteArray((short)0x12); break;
+            case "cmpGT":       writeShortToByteArray((short)0x13); break;
+            case "cmpLE":       writeShortToByteArray((short)0x14); break;
+            case "cmpGE":       writeShortToByteArray((short)0x15); break;
+            case "call":        writeShortToByteArray((short)0x16); break;
+            case "retProc":     writeShortToByteArray((short)0x17); break;
+            case "jmp":         writeShortToByteArray((short)0x18); break;
+            case "jnot":        writeShortToByteArray((short)0x19); break;
+            case "entryProc":   writeShortToByteArray((short)0x1A); break;
+            default:
+                break;
+        }
+    }
+    public void writeArg(short... arg){
+        for(short i:arg){
+            baos.write(i%0x100);
+            baos.write(i/0x100);
         }
             
     }
-    public String replaceAt(String s, int pos, String c) {
-        return s.substring(0, pos) + c + s.substring(pos + c.length());
+    public void replaceAt(int position, short value) {
+        byte[] bytes = baos.toByteArray();
+        bytes[position] = (byte) ((value >> 8) & 0xFF);
+        bytes[position + 1] = (byte) (value & 0xFF);
+        baos.reset();
+        baos.write(bytes, 0, bytes.length);
     }
 
     public void genCode(String command, int... args){
         if(args.length>3)System.exit(-1);
-        code+=command;
+        writeCommand(command);
         try{
             switch (command) {
-                case "entryProc": writeArg(args[0],args[1], args[2]); System.out.println("he");break;
+                case "entryProc": writeArg((short)args[0],(short)args[1], (short)args[2]); System.out.println("he");break;
                 case "puValVrGlob": 
-                case "puAdrVrGlob": writeArg(args[0], args[1]); break;
+                case "puAdrVrGlob": writeArg((short)args[0], (short)args[1]); break;
                 case "puValVrMain": 
                 case "puAdrVrMain":  
                 case "puValVrLocl": 
@@ -121,7 +173,7 @@ public class Parser extends Lexer{
                 case "puConst":
                 case "jmp" : 
                 case "jnot":
-                case "call":writeArg(args[0]); break;
+                case "call":writeArg((short)args[0]); break;
                 default: System.out.println(command);break;
             }
         }catch(Exception e){
@@ -131,11 +183,16 @@ public class Parser extends Lexer{
     }
     public void writeCodeInFile(){
         try {
-            fos.write(code.getBytes());
+            fos.write(baos.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+/************************************************************************************/
+/***********************Definition der Bogen-Klassen*********************************/
+/************************************************************************************/
+
     public abstract class Arc{
         int next;
         int alt;
@@ -216,7 +273,11 @@ public class Parser extends Lexer{
             return "ArcEnd";
         }
     }
-    
+
+/************************************************************************************/
+/*************************Konstruktor mit Graphendefinition**************************/
+/************************************************************************************/
+
     public Parser(String filename){
         currentProc = new Procedure("main");
         mainProc=currentProc; //->nur fürs debuggen
@@ -224,21 +285,13 @@ public class Parser extends Lexer{
         constBlock = new ArrayList<Long>();
         t=new Token();
         outFile = new File(filename.split(".pl0")[0]+".o");
+        baos = new ByteArrayOutputStream();
         try{
             fos = new FileOutputStream(outFile.getName());
         }catch(Exception e){
             System.out.println(e.getMessage());
             System.exit(-1);
         }
-        // try {
-        //     if (outFile.createNewFile()) {
-        //         System.out.println("Datei wurde erstellt: " + outFile.getName());
-        //     } else {
-        //         System.out.println("Die Datei existiert bereits.");
-        //     }
-        // } catch (IOException e) {
-        //     System.out.println("Fehler beim Erstellen der Datei: " + e.getMessage());
-        // }
 
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3);
         statement[1] = new ArcSymbol(128, 2, 0);
@@ -297,13 +350,13 @@ public class Parser extends Lexer{
         block[15] = new ArcGraph(block, 16, 0);
         block[16] = new ArcSymbol(';', 12, 0);
         block[17] = new ArcNil(18){boolean action(){
-            code="";
+            baos = new ByteArrayOutputStream();
             genCode("entryProc", 0, currentProc.procIndex, currentProc.varAdress);
             return true;
         }};
         block[18] = new ArcGraph(statement, 19, 0){boolean action(){
             genCode("retProc");
-            code=replaceAt(code, 9, ""+code.length());
+            replaceAt(1, (short)(baos.size()));
             writeCodeInFile();
             currentProc.namelist.clear();
             currentProc = currentProc.parent;
@@ -354,6 +407,10 @@ public class Parser extends Lexer{
         condition[9] = new ArcGraph(expression, 10, 0);
         condition[10] = new ArcEnd();   
     }
+
+/************************************************************************************/
+/*************************Funktionen des Parsers************************************/
+/************************************************************************************/
     boolean parse(Arc graph[]){
         boolean succ=false;
         Arc bogen = graph[0];
@@ -374,37 +431,10 @@ public class Parser extends Lexer{
             }
         }
     }
-    int i=0;
-
-    void printVersatz(){
-            for(int j=0; j<i; j++)System.out.print(" ");
-    }
-    String identClass(Ident id){
-        if(id instanceof Procedure)return "Procedure";
-        if(id instanceof Variable)return "Variable";
-        if(id instanceof Constant)return "Constant";
-        else return "Ident";
-
-    }
-    void printNamelist(LinkedList<Ident> namelist){
-        int j=0;
-        for(int k=0; k<namelist.size(); k++){
-            printVersatz(); System.out.println(j+ ": "+ identClass(namelist.get(k))+ " - "+ namelist.get(k).name);
-            if(namelist.get(k) instanceof Procedure){
-                i++;
-                printNamelist(namelist.get(k).getNameList());
-                i--;
-            }
-            j++;
-        }
-    }
-
     public static void main(String args[]) throws IOException{
         Parser parser = new Parser(args[0]);
         if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
         else System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
         parser.fos.close();
-        //parser.printNamelist(mainProc.namelist); //--> show namelists (debug)
-        //for(Long i:parser.constBlock)System.out.println(i); --> show constBlock (debug)
     }
 }

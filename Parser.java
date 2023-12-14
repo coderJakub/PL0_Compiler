@@ -107,8 +107,8 @@ public class Parser extends Lexer{
 /*************************Funktionen der Codegenerierung*****************************/
 /************************************************************************************/
     public void writeShortToByteArray(short value) {
-        baos.write((value >> 8) & 0xFF);
         baos.write(value & 0xFF);
+        baos.write((value >> 8) & 0xFF);
     }
     public void writeCommand(String command){
         switch (command) {
@@ -135,25 +135,26 @@ public class Parser extends Lexer{
             case "cmpLE":       writeShortToByteArray((short)0x14); break;
             case "cmpGE":       writeShortToByteArray((short)0x15); break;
             case "call":        writeShortToByteArray((short)0x16); break;
-            case "retProc":     writeShortToByteArray((short)0x17); break;
+            case "retProc":     baos.write(0x17); break;
             case "jmp":         writeShortToByteArray((short)0x18); break;
             case "jnot":        writeShortToByteArray((short)0x19); break;
-            case "entryProc":   writeShortToByteArray((short)0x1A); break;
+            case "entryProc":   baos.write(0x1A); break;
             default:
                 break;
         }
     }
     public void writeArg(short... arg){
         for(short i:arg){
-            baos.write(i%0x100);
-            baos.write(i/0x100);
+            System.out.print(" "+i);
+            writeShortToByteArray(i);
         }
             
     }
     public void replaceAt(int position, short value) {
+        System.out.println("replaceAt: "+position+" "+value);
         byte[] bytes = baos.toByteArray();
-        bytes[position] = (byte) ((value >> 8) & 0xFF);
-        bytes[position + 1] = (byte) (value & 0xFF);
+        bytes[position] = (byte) (value & 0xFF);
+        bytes[position + 1] = (byte) ((value >> 8) & 0xFF);
         baos.reset();
         baos.write(bytes, 0, bytes.length);
     }
@@ -161,9 +162,10 @@ public class Parser extends Lexer{
     public void genCode(String command, int... args){
         if(args.length>3)System.exit(-1);
         writeCommand(command);
+        System.out.print(command);
         try{
             switch (command) {
-                case "entryProc": writeArg((short)args[0],(short)args[1], (short)args[2]); System.out.println("he");break;
+                case "entryProc": writeArg((short)args[0],(short)args[1], (short)args[2]); break;
                 case "puValVrGlob": 
                 case "puAdrVrGlob": writeArg((short)args[0], (short)args[1]); break;
                 case "puValVrMain": 
@@ -174,8 +176,9 @@ public class Parser extends Lexer{
                 case "jmp" : 
                 case "jnot":
                 case "call":writeArg((short)args[0]); break;
-                default: System.out.println(command);break;
+                default: break;
             }
+            System.out.println("");
         }catch(Exception e){
             System.out.println("Fehler beim generieren des Codes: Anzahl Parameter stimmt nicht überein!");
             System.exit(-1);
@@ -284,7 +287,8 @@ public class Parser extends Lexer{
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
-        outFile = new File(filename.split(".pl0")[0]+".o");
+        System.out.println(filename);
+        outFile = new File(filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".o");
         baos = new ByteArrayOutputStream();
         try{
             fos = new FileOutputStream(outFile.getName());

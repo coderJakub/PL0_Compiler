@@ -301,7 +301,8 @@ public class Parser extends Lexer{
         constBlock = new ArrayList<Long>();
         t=new Token();
         System.out.println(filename);
-        outFile = new File(filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
+        System.out.println("src-cl0/"+filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
+        outFile = new File("src-cl0/"+filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
         baos = new ByteArrayOutputStream();
         writeShortToByteArray((short)0);
         writeShortToByteArray((short)0);
@@ -494,6 +495,11 @@ public class Parser extends Lexer{
         Parser parser = new Parser(args[0]);
         if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
         else System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
+        for(int i=0; i<parser.constBlock.size(); i++){
+            parser.writeShortToByteArray((short)i);
+            parser.writeShortToByteArray((short)(parser.constBlock.get(i)&0xFFFF));
+        }
+        parser.writeCodeInFile();
         parser.fos.close();
     }
 }

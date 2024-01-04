@@ -38,6 +38,7 @@ public class Parser extends Lexer{
             prozNum =(currentProc==null)?0:currentProc.procIndex;
             name=s;
         }
+        abstract short getAddress();
         abstract LinkedList<Ident> getNameList(); //->nur fürs debuggen
     }
 
@@ -51,6 +52,10 @@ public class Parser extends Lexer{
         }
         LinkedList<Ident> getNameList(){
             return null;
+        }
+        @Override
+        short getAddress() {
+            return (short)address;
         }
     }
 
@@ -69,6 +74,10 @@ public class Parser extends Lexer{
         LinkedList<Ident> getNameList(){
             return null;
         }
+        @Override
+        short getAddress() {
+            return -1;
+        }
     }
 
     public class Procedure extends Ident{
@@ -86,6 +95,10 @@ public class Parser extends Lexer{
         }
         LinkedList<Ident> getNameList(){
             return namelist;
+        }
+        @Override
+        short getAddress() {
+            return -1;
         }
     }
 
@@ -112,32 +125,32 @@ public class Parser extends Lexer{
     }
     public void writeCommand(String command){
         switch (command) {
-            case "puValVrLocl": writeShortToByteArray((short)0x00); break;
-            case "puValVrMain": writeShortToByteArray((short)0x01); break;
-            case "puValVrGlob": writeShortToByteArray((short)0x02); break;
-            case "puAdrVrLocl": writeShortToByteArray((short)0x03); break;
-            case "puAdrVrMain": writeShortToByteArray((short)0x04); break;
-            case "puAdrVrGlob": writeShortToByteArray((short)0x05); break;
-            case "puConst":     writeShortToByteArray((short)0x06); break;
-            case "storeVal":    writeShortToByteArray((short)0x07); break;
-            case "putVal":      writeShortToByteArray((short)0x08); break;
-            case "getVal":      writeShortToByteArray((short)0x09); break;
-            case "vzMinus":     writeShortToByteArray((short)0x0A); break;
-            case "odd":         writeShortToByteArray((short)0x0B); break;
-            case "OpAdd":       writeShortToByteArray((short)0x0C); break;
-            case "OpSub":       writeShortToByteArray((short)0x0D); break;
-            case "OpMult":      writeShortToByteArray((short)0x0E); break;
-            case "OpDiv":       writeShortToByteArray((short)0x0F); break;
-            case "cmpEQ":       writeShortToByteArray((short)0x10); break;
-            case "cmpNE":       writeShortToByteArray((short)0x11); break;
-            case "cmpLT":       writeShortToByteArray((short)0x12); break;
-            case "cmpGT":       writeShortToByteArray((short)0x13); break;
-            case "cmpLE":       writeShortToByteArray((short)0x14); break;
-            case "cmpGE":       writeShortToByteArray((short)0x15); break;
-            case "call":        writeShortToByteArray((short)0x16); break;
+            case "puValVrLocl": baos.write(0x00); break;
+            case "puValVrMain": baos.write(0x01); break;
+            case "puValVrGlob": baos.write(0x02); break;
+            case "puAdrVrLocl": baos.write(0x03); break;
+            case "puAdrVrMain": baos.write(0x04); break;
+            case "puAdrVrGlob": baos.write(0x05); break;
+            case "puConst":     baos.write(0x06); break;
+            case "storeVal":    baos.write(0x07); break;
+            case "putVal":      baos.write(0x08); break;
+            case "getVal":      baos.write(0x09); break;
+            case "vzMinus":     baos.write(0x0A); break;
+            case "odd":         baos.write(0x0B); break;
+            case "OpAdd":       baos.write(0x0C); break;
+            case "OpSub":       baos.write(0x0D); break;
+            case "OpMult":      baos.write(0x0E); break;
+            case "OpDiv":       baos.write(0x0F); break;
+            case "cmpEQ":       baos.write(0x10); break;
+            case "cmpNE":       baos.write(0x11); break;
+            case "cmpLT":       baos.write(0x12); break;
+            case "cmpGT":       baos.write(0x13); break;
+            case "cmpLE":       baos.write(0x14); break;
+            case "cmpGE":       baos.write(0x15); break;
+            case "call":        baos.write(0x16); break;
             case "retProc":     baos.write(0x17); break;
-            case "jmp":         writeShortToByteArray((short)0x18); break;
-            case "jnot":        writeShortToByteArray((short)0x19); break;
+            case "jmp":         baos.write(0x18); break;
+            case "jnot":        baos.write(0x19); break;
             case "entryProc":   baos.write(0x1A); break;
             default:
                 break;
@@ -288,18 +301,32 @@ public class Parser extends Lexer{
         constBlock = new ArrayList<Long>();
         t=new Token();
         System.out.println(filename);
-        outFile = new File(filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".o");
+        outFile = new File(filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
         baos = new ByteArrayOutputStream();
+        writeShortToByteArray((short)0);
+        writeShortToByteArray((short)0);
         try{
             fos = new FileOutputStream(outFile.getName());
         }catch(Exception e){
             System.out.println(e.getMessage());
             System.exit(-1);
         }
+        writeCodeInFile();
 
-        statement[0] = new ArcToken(lexer.new Token(3), 1, 3);
+        statement[0] = new ArcToken(lexer.new Token(3), 1, 3){boolean action(){
+            Ident i = searchIdentGlobal(t.str);
+            if(i==null || !(i instanceof Variable))System.exit(-1);
+            
+            if(i.prozNum==0)genCode("puAdrVrMain", ((Variable)i).address);
+            else if(i.prozNum==currentProc.procIndex)genCode("puAdrVrLocl", ((Variable)i).address);
+            else genCode("puValVrGlob", ((Variable)i).address, i.prozNum);
+            return true;
+        }};
         statement[1] = new ArcSymbol(128, 2, 0);
-        statement[2] = new ArcGraph(expression, 22, 0);
+        statement[2] = new ArcGraph(expression, 22, 0){boolean action(){
+            genCode("storeVal");
+            return true;
+        }};
         statement[3] = new ArcSymbol(136, 4, 7);
         statement[4] = new ArcGraph(condition, 5, 0);
         statement[5] = new ArcSymbol(139, 6, 0);
@@ -373,30 +400,58 @@ public class Parser extends Lexer{
         program[2] = new ArcEnd();
         
         expression[0] = new ArcSymbol('-', 1, 2);
-        expression[1] = new ArcGraph(term, 3, 0);
+        expression[1] = new ArcGraph(term, 3, 0){boolean action(){
+            genCode("vzMinus");
+            return true;
+        }};
         expression[2] = new ArcGraph(term, 3, 0);
         expression[3] = new ArcNil(4);
         expression[4] = new ArcSymbol('+', 6, 5);
         expression[5] = new ArcSymbol('-', 7, 8);
-        expression[6] = new ArcGraph(term, 3, 0);
-        expression[7] = new ArcGraph(term, 3, 0);
+        expression[6] = new ArcGraph(term, 3, 0){boolean action(){
+            genCode("OpAdd");
+            return true;
+        }};
+        expression[7] = new ArcGraph(term, 3, 0){boolean action(){
+            genCode("OpSub");
+            return true;
+        }};
         expression[8] = new ArcNil(9);
         expression[9] = new ArcEnd();
         
         term[0] = new ArcGraph(factor, 1, 0);
         term[1] = new ArcNil(2);
         term[2] = new ArcSymbol('*', 3, 4);
-        term[3] = new ArcGraph(factor, 1, 0);
-        term[4] = new ArcSymbol('/', 5, 6);
+        term[3] = new ArcGraph(factor, 1, 0){boolean action(){
+            genCode("OpMult");
+            return true;
+        }};
+        term[4] = new ArcSymbol('/', 5, 6){boolean action(){
+            genCode("OpDiv");
+            return true;
+        }};
         term[5] = new ArcGraph(factor, 1, 0);
         term[6] = new ArcNil(7);
         term[7] = new ArcEnd();
         
-        factor[0] = new ArcToken(lexer.new Token(2), 5, 1);
+        factor[0] = new ArcToken(lexer.new Token(2), 5, 1){boolean action(){
+            if(constBlock.indexOf(t.num)==-1)constBlock.add(t.num);
+            genCode("puConst", (short)constBlock.indexOf(t.num));
+            return true;
+        }};
         factor[1] = new ArcSymbol('(', 2, 4);
         factor[2] = new ArcGraph(expression, 3, 0);
         factor[3] = new ArcSymbol(')', 5, 0);
-        factor[4] = new ArcToken(lexer.new Token(3), 5, 0);
+        factor[4] = new ArcToken(lexer.new Token(3), 5, 0){boolean action(){
+            Ident i = searchIdentGlobal(t.str);
+            if(i==null || i instanceof Procedure)System.exit(-1);
+            
+            if(i instanceof Constant)genCode("puConst", ((Constant)i).constIndex);
+            else if(i.prozNum==0)genCode("puValVrMain", ((Variable)i).address);
+            else if(i.prozNum==currentProc.procIndex)genCode("puValVrLocl", ((Variable)i).address);
+            else genCode("puValVrGlob", ((Variable)i).address, i.prozNum);
+            return true;
+        }};
         factor[5] = new ArcEnd();
         
         condition[0] = new ArcSymbol(137, 1, 2);

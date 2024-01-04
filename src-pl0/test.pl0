@@ -1,12 +1,8 @@
-var a, fak;
+var a,b,Max;
+procedure p1;
 begin
- ?a;
- fak:=1;
- while a > 0 do
-   begin
-    fak:= fak*a;
-    a:=a-1;
-    ! a;
-    ! fak
-   end
-end .
+  ?a
+end;
+begin
+  ?a
+end.

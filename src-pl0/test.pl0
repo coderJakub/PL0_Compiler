@@ -1,8 +1,6 @@
-var a,b,Max;
-procedure p1;
+var a;
 begin
-  ?a
-end;
-begin
-  ?a
+?a;
+a:=(1000/2);
+!a
 end.

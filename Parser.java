@@ -123,6 +123,14 @@ public class Parser extends Lexer{
         baos.write(value & 0xFF);
         baos.write((value >> 8) & 0xFF);
     }
+    public void writeIntToByteArray(int value) {
+        baos.write(value & 0xFF);
+        baos.write((value >> 8) & 0xFF);
+        baos.write((value >> 16) & 0xFF);
+        baos.write((value >> 24) & 0xFF);
+    }
+
+
     public void writeCommand(String command){
         switch (command) {
             case "puValVrLocl": baos.write(0x00); break;
@@ -300,12 +308,15 @@ public class Parser extends Lexer{
         lexer = new Lexer(filename);
         constBlock = new ArrayList<Long>();
         t=new Token();
+
         System.out.println(filename);
         System.out.println("src-cl0/"+filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
+
         outFile = new File("src-cl0/"+filename.split("/")[filename.split("/").length-1].split(".pl0")[0]+".cl0");
         baos = new ByteArrayOutputStream();
+        writeShortToByteArray((short)1);
         writeShortToByteArray((short)0);
-        writeShortToByteArray((short)0);
+
         try{
             fos = new FileOutputStream(outFile.getName());
         }catch(Exception e){
@@ -343,9 +354,22 @@ public class Parser extends Lexer{
         statement[15] = new ArcSymbol(132, 16, 17);
         statement[16] = new ArcToken(lexer.new Token(3), 22, 0);
         statement[17] = new ArcSymbol('?', 18, 19);
-        statement[18] = new ArcToken(lexer.new Token(3), 22, 0);
+        statement[18] = new ArcToken(lexer.new Token(3), 22, 0){boolean action(){
+            Ident i = searchIdentGlobal(t.str);
+            if(i==null || !(i instanceof Variable))System.exit(-1);
+            
+            if(i.prozNum==0)genCode("puAdrVrMain", ((Variable)i).address);
+            else if(i.prozNum==currentProc.procIndex)genCode("puAdrVrLocl", ((Variable)i).address);
+            else genCode("puValVrGlob", ((Variable)i).address, i.prozNum);
+            genCode("getVal");
+            return true;
+        
+        }};
         statement[19] = new ArcSymbol('!', 20, 21);
-        statement[20] = new ArcGraph(expression, 22, 21);
+        statement[20] = new ArcGraph(expression, 22, 21){boolean action(){
+            genCode("putVal");
+            return true;
+        }};
         statement[21] = new ArcNil(22);
         statement[22] = new ArcEnd();
 
@@ -493,11 +517,16 @@ public class Parser extends Lexer{
     }
     public static void main(String args[]) throws IOException{
         Parser parser = new Parser(args[0]);
+
         if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
-        else System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
+        else {
+            System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
+            System.exit(-1);
+        }
+        
+        parser.baos.reset();
         for(int i=0; i<parser.constBlock.size(); i++){
-            parser.writeShortToByteArray((short)i);
-            parser.writeShortToByteArray((short)(parser.constBlock.get(i)&0xFFFF));
+            parser.writeIntToByteArray(parser.constBlock.get(i).intValue());
         }
         parser.writeCodeInFile();
         parser.fos.close();

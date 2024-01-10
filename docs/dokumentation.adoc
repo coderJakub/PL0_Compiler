@@ -120,7 +120,7 @@ image::Parsergraphen.png[]
 * aus Ident sind die Klassen Constant, Variable und Procedure abgeleitet
 ** Constant - speichert den Index, an welcher Stelle sich der Wert im Constant-Block befindet
 ** Variable - speichert die Relativaddresse (fängt für jede Procedure bei 0 an)
-** Procedure - speichert den seinen procIdx, einen Zeiger auf die parent-proc, seine Namensliste und die relativaddresse für nächste Varibel
+** Procedure - speichert den seinen procIdx, einen Zeiger auf die parent-proc, seine Namensliste und die relativaddresse für nächste Variabel
 * als Namensliste wird jeweils eine `_LinkedList<Ident>_` angelegt (beinhaltet Daten des Typs Ident)
 * als Constant_Block wird eine `_ArrayList<Long>_` angelegt, wobei jeder Wert nur einmal gespeichert wird!!
 * in `_Procedure currentProc_` wird die aktuelle Prozedur gespeichert

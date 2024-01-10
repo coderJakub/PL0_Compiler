@@ -1,7 +1,7 @@
 var a,b,Max;
 procedure p1;
 begin
-  if a>=b then Max:=a;
+  if a>=9223372036854775807 then Max:=a;
   if a< b then Max:=b
 end;
 begin

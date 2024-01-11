@@ -26,6 +26,8 @@ public class Parser extends Lexer{
 
     File outFile;
     FileOutputStream fos;
+    Stack<Short> labels = new Stack<Short>();
+    int comparisonOperator;
 
 /************************************************************************************/
 /*********************Definition der Namenslisten-Klassen****************************/
@@ -106,13 +108,16 @@ public class Parser extends Lexer{
         for(Ident i:p.namelist)if(i.name.equals(name))return i;
         return null;
     }
+
     Ident searchIdentGlobal(String name){
         Procedure p = currentProc;
         do{
             Ident i = searchIdent(p, name);
             if(i!=null)return i;
             p=p.parent;
-        }while(p.procIndex==0);
+        }while(p.procIndex!=0);
+        Ident i = searchIdent(mainProc, name);
+        if(i!=null)return i;
         return null;
     }
 
@@ -166,10 +171,9 @@ public class Parser extends Lexer{
     }
     public void writeArg(short... arg){
         for(short i:arg){
-            System.out.print(" "+i);
+            //System.out.print(" "+i);
             writeShortToByteArray(i);
-        }
-            
+        }  
     }
     public void replaceAt(int position, short value) {
         System.out.println("replaceAt: "+position+" "+value);
@@ -183,7 +187,7 @@ public class Parser extends Lexer{
     public void genCode(String command, int... args){
         if(args.length>3)System.exit(-1);
         writeCommand(command);
-        System.out.print(command);
+        //System.out.print(command);
         try{
             switch (command) {
                 case "entryProc": writeArg((short)args[0],(short)args[1], (short)args[2]); break;
@@ -199,7 +203,7 @@ public class Parser extends Lexer{
                 case "call":writeArg((short)args[0]); break;
                 default: break;
             }
-            System.out.println("");
+            //System.out.println("");
         }catch(Exception e){
             System.out.println("Fehler beim generieren des Codes: Anzahl Parameter stimmt nicht überein!");
             System.exit(-1);
@@ -210,6 +214,17 @@ public class Parser extends Lexer{
             fos.write(baos.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void writeProcNum(){
+        try{
+            RandomAccessFile raf = new RandomAccessFile(outFile.getName(), "rw");
+            raf.writeByte(procCounter & 0xFF);
+            raf.writeByte((procCounter >> 8) & 0xFF);
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+            System.exit(-1);
         }
     }
 
@@ -327,11 +342,14 @@ public class Parser extends Lexer{
 
         statement[0] = new ArcToken(lexer.new Token(3), 1, 3){boolean action(){
             Ident i = searchIdentGlobal(t.str);
-            if(i==null || !(i instanceof Variable))System.exit(-1);
-            
+            if(i==null || !(i instanceof Variable)){
+                if(i==null)System.out.println("Variable "+t.str+" nicht gefunden!");
+                System.out.println("Fehler: "+t.str+" ist keine Variable!");
+                return false;
+            }
             if(i.prozNum==0)genCode("puAdrVrMain", ((Variable)i).address);
             else if(i.prozNum==currentProc.procIndex)genCode("puAdrVrLocl", ((Variable)i).address);
-            else genCode("puValVrGlob", ((Variable)i).address, i.prozNum);
+            else genCode("puAdrVrGlob", ((Variable)i).address, i.prozNum);
             return true;
         }};
         statement[1] = new ArcSymbol(128, 2, 0);
@@ -340,27 +358,61 @@ public class Parser extends Lexer{
             return true;
         }};
         statement[3] = new ArcSymbol(136, 4, 7);
-        statement[4] = new ArcGraph(condition, 5, 0);
+        statement[4] = new ArcGraph(condition, 5, 0){boolean action(){
+            labels.push((short)(baos.size()+1));
+            genCode("jnot", (short)0);
+            return true;
+        }};
         statement[5] = new ArcSymbol(139, 6, 0);
-        statement[6] = new ArcGraph(statement, 22, 0);
-        statement[7] = new ArcSymbol(141, 8, 11);
-        statement[8] = new ArcGraph(condition, 9, 0);
+        statement[6] = new ArcGraph(statement, 22, 0){boolean action(){
+            short label = labels.pop();
+            replaceAt(label, (short)(baos.size()-label-2));
+            return true;
+        }};
+        statement[7] = new ArcSymbol(141, 8, 11){boolean action(){
+            labels.push((short)(baos.size()));
+            return true;
+        }};
+        statement[8] = new ArcGraph(condition, 9, 0){boolean action(){
+            labels.push((short)(baos.size()+1));
+            genCode("jnot", (short)0);
+            return true;
+        }};
         statement[9] = new ArcSymbol(134, 10, 0);
-        statement[10] = new ArcGraph(statement, 22, 0);
+        statement[10] = new ArcGraph(statement, 22, 0){boolean action(){
+            short labelJMPN = labels.pop();
+            short labelJMP = labels.pop();
+            genCode("jmp", (short) labelJMP-(baos.size()+3));
+            replaceAt(labelJMPN, (short)(baos.size()-labelJMPN-2));
+            return true;
+        }};
         statement[11] = new ArcSymbol(131, 12, 15);
         statement[12] = new ArcGraph(statement, 13, 0);
         statement[13] = new ArcSymbol(';', 12, 14);
         statement[14] = new ArcSymbol(135, 22, 0);
         statement[15] = new ArcSymbol(132, 16, 17);
-        statement[16] = new ArcToken(lexer.new Token(3), 22, 0);
+        statement[16] = new ArcToken(lexer.new Token(3), 22, 0){boolean action(){
+            Ident i = searchIdentGlobal(t.str);
+            if(i==null || !(i instanceof Procedure)){
+                if(i==null)System.out.println("Prozedur "+t.str+" nicht gefunden!");
+                else System.out.println("Fehler: "+t.str+" ist keine Prozedur!");
+                return false;
+            }
+            genCode("call", ((Procedure)i).procIndex);
+            return true;
+        }};
         statement[17] = new ArcSymbol('?', 18, 19);
         statement[18] = new ArcToken(lexer.new Token(3), 22, 0){boolean action(){
             Ident i = searchIdentGlobal(t.str);
-            if(i==null || !(i instanceof Variable))System.exit(-1);
+            if(i==null || !(i instanceof Variable)){
+                if(i==null)System.out.println("Variable "+t.str+" nicht gefunden!");
+                else System.out.println("Fehler: "+t.str+" ist keine Variable!");
+                return false;
+            }
             
             if(i.prozNum==0)genCode("puAdrVrMain", ((Variable)i).address);
             else if(i.prozNum==currentProc.procIndex)genCode("puAdrVrLocl", ((Variable)i).address);
-            else genCode("puValVrGlob", ((Variable)i).address, i.prozNum);
+            else genCode("puAdrVrGlob", ((Variable)i).address, i.prozNum);
             genCode("getVal");
             return true;
         
@@ -414,7 +466,7 @@ public class Parser extends Lexer{
             genCode("retProc");
             replaceAt(1, (short)(baos.size()));
             writeCodeInFile();
-            currentProc.namelist.clear();
+            //currentProc.namelist.clear();
             currentProc = currentProc.parent;
             return true;
         }};
@@ -451,11 +503,11 @@ public class Parser extends Lexer{
             genCode("OpMult");
             return true;
         }};
-        term[4] = new ArcSymbol('/', 5, 6){boolean action(){
+        term[4] = new ArcSymbol('/', 5, 6);
+        term[5] = new ArcGraph(factor, 1, 0){boolean action(){
             genCode("OpDiv");
             return true;
         }};
-        term[5] = new ArcGraph(factor, 1, 0);
         term[6] = new ArcNil(7);
         term[7] = new ArcEnd();
         
@@ -469,8 +521,11 @@ public class Parser extends Lexer{
         factor[3] = new ArcSymbol(')', 5, 0);
         factor[4] = new ArcToken(lexer.new Token(3), 5, 0){boolean action(){
             Ident i = searchIdentGlobal(t.str);
-            if(i==null || i instanceof Procedure)System.exit(-1);
-            
+            if(i==null || i instanceof Procedure){
+                if(i==null)System.out.println("Variable "+t.str+" nicht gefunden!");
+                else System.out.println("Fehler: "+t.str+" ist keine Prozedur!");
+                return false;
+            }
             if(i instanceof Constant)genCode("puConst", ((Constant)i).constIndex);
             else if(i.prozNum==0)genCode("puValVrMain", ((Variable)i).address);
             else if(i.prozNum==currentProc.procIndex)genCode("puValVrLocl", ((Variable)i).address);
@@ -482,13 +537,43 @@ public class Parser extends Lexer{
         condition[0] = new ArcSymbol(137, 1, 2);
         condition[1] = new ArcGraph(expression, 10, 0);
         condition[2] = new ArcGraph(expression, 3, 0);
-        condition[3] = new ArcSymbol('=', 9, 4);
-        condition[4] = new ArcSymbol('#', 9, 5);
-        condition[5] = new ArcSymbol('<', 9, 6);
-        condition[6] = new ArcSymbol('>', 9, 7);
-        condition[7] = new ArcSymbol(129, 9, 8);
-        condition[8] = new ArcSymbol(130, 9, 0);
-        condition[9] = new ArcGraph(expression, 10, 0);
+        condition[3] = new ArcSymbol('=', 9, 4){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[4] = new ArcSymbol('#', 9, 5){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[5] = new ArcSymbol('<', 9, 6){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[6] = new ArcSymbol('>', 9, 7){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[7] = new ArcSymbol(129, 9, 8){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[8] = new ArcSymbol(130, 9, 0){boolean action(){
+            comparisonOperator=t.sym;
+            return true;
+        }};
+        condition[9] = new ArcGraph(expression, 10, 0){boolean action(){
+            switch (comparisonOperator) {
+                case '=': genCode("cmpEQ"); break;
+                case '#': genCode("cmpNE"); break;
+                case '<': genCode("cmpLT"); break;
+                case '>': genCode("cmpGT"); break;
+                case 129: genCode("cmpLE"); break;
+                case 130: genCode("cmpGE"); break;
+                default:
+                    break;
+            }
+            return true;
+        }};
         condition[10] = new ArcEnd();   
     }
 
@@ -515,19 +600,34 @@ public class Parser extends Lexer{
             }
         }
     }
+    int einsatz=0;
+    public void printNameList(LinkedList<Ident> list){
+        for(Ident i:list){
+            for(int k=0; k<einsatz; k++)System.out.print(" ");
+            if(i instanceof Variable)System.out.println("Variable: "+i.name);
+            else if(i instanceof Constant)System.out.println("Konstante: "+i.name);
+            else if(i instanceof Procedure){
+                System.out.println("Prozedur: "+i.name);
+                einsatz++;
+                printNameList(((Procedure)i).namelist);
+                einsatz--;
+            }
+        }
+    }
     public static void main(String args[]) throws IOException{
         Parser parser = new Parser(args[0]);
 
         if(parser.parse(parser.program))System.out.println("Parsen erfolgreich!");
         else {
             System.out.println("Parsen nicht erfolgreich! Fehler bei Zeile "+ parser.t.posCol+ ", Zeichen: "+ parser.t.posLine);
+            parser.printNameList(mainProc.namelist);
             System.exit(-1);
         }
-        
         parser.baos.reset();
         for(int i=0; i<parser.constBlock.size(); i++){
             parser.writeIntToByteArray(parser.constBlock.get(i).intValue());
         }
+        parser.writeProcNum();
         parser.writeCodeInFile();
         parser.fos.close();
     }

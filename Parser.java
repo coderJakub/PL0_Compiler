@@ -7,7 +7,7 @@ public class Parser extends Lexer{
     Token t;
     Arc[] block=new Arc[20];
     Arc[] program=new Arc[3];
-    Arc[] statement=new Arc[23];
+    Arc[] statement=new Arc[26];
     Arc[] expression=new Arc[11];
     Arc[] term=new Arc[8];
     Arc[] factor=new Arc[6];
@@ -364,11 +364,7 @@ public class Parser extends Lexer{
             return true;
         }};
         statement[5] = new ArcSymbol(139, 6, 0);
-        statement[6] = new ArcGraph(statement, 22, 0){boolean action(){
-            short label = labels.pop();
-            replaceAt(label, (short)(baos.size()-label-2));
-            return true;
-        }};
+        statement[6] = new ArcGraph(statement, 23, 0);
         statement[7] = new ArcSymbol(141, 8, 11){boolean action(){
             labels.push((short)(baos.size()));
             return true;
@@ -424,6 +420,24 @@ public class Parser extends Lexer{
         }};
         statement[21] = new ArcNil(22);
         statement[22] = new ArcEnd();
+        statement[23] = new ArcSymbol(142, 25, 24){boolean action(){
+            short labelElse = labels.pop();
+            labels.push((short)(baos.size()+1));
+            genCode("jmp", (short)0);
+
+            replaceAt(labelElse, (short)(baos.size()-labelElse-2));
+            return true;
+        }};
+        statement[24] = new ArcNil(22){boolean action(){
+            short labelElse = labels.pop();
+            replaceAt(labelElse, (short)(baos.size()-labelElse-2));
+            return true;
+        }};
+        statement[25] = new ArcGraph(statement, 22, 0){boolean action(){
+            short labelIf = labels.pop();
+            replaceAt(labelIf, (short)(baos.size()-labelIf-2));
+            return true;
+        }};
 
         block[0] = new ArcSymbol(133, 1, 6);
         block[1] = new ArcToken(lexer.new Token(3), 2, 0){boolean action(){

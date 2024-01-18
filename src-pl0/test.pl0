@@ -1,10 +1,12 @@
-const c=10;
-var i;
+const c=2;
+var a,b,m;
 begin
-i:=0;
-while i<=c do
-begin
-!i;
-i:=i+1
-end
+    ?a;
+    ?b;
+    if b>a then
+    begin
+        !120;
+        !92;
+    end;
+    !a
 end.

@@ -7,7 +7,7 @@ public class Lexer{
     String buf;
     Token t;
     int state;
-    String[] keywords = {"BEGIN", "CALL", "CONST", "DO", "END", "IF", "ODD", "PROCEDURE", "THEN", "VAR", "WHILE"};
+    String[] keywords = {"BEGIN", "CALL", "CONST", "DO", "END", "IF", "ODD", "PROCEDURE", "THEN", "VAR", "WHILE", "ELSE"};
     int posLine=0;
     int posCol=0;
 
@@ -110,7 +110,7 @@ public class Lexer{
         //Data
         long num;
         String str;
-        int sym; //:=128, <=129, >=130, "BEGIN"131, "CALL",132 "CONST"133, "DO"134, "END"135, "IF"136, "ODD"137, "PROCEDURE"138, "THEN"139, "VAR"140, "WHILE"141
+        int sym; //:=128, <=129, >=130, "BEGIN"131, "CALL",132 "CONST"133, "DO"134, "END"135, "IF"136, "ODD"137, "PROCEDURE"138, "THEN"139, "VAR"140, "WHILE"141, "ELSE"142
 
         public Token(){
             type=0;

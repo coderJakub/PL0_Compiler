@@ -444,6 +444,8 @@ public class Parser extends Lexer{
         }};
         statement[26] = new ArcToken(lexer.new Token(4), 22, 20){boolean action(){
             //generate String; how to put String?? -> statement 19 (next->26 (20 alternative))
+            genCode("putStrg");
+            writeStringToByteArray(t.str);
             return true;
         }};
 

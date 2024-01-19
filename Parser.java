@@ -134,6 +134,9 @@ public class Parser extends Lexer{
         baos.write((value >> 16) & 0xFF);
         baos.write((value >> 24) & 0xFF);
     }
+    public void writeStringToByteArray(String value) {
+        for(int i=0; i<value.length(); i++)baos.write(value.charAt(i));
+    }
 
 
     public void writeCommand(String command){
@@ -165,6 +168,7 @@ public class Parser extends Lexer{
             case "jmp":         baos.write(0x18); break;
             case "jnot":        baos.write(0x19); break;
             case "entryProc":   baos.write(0x1A); break;
+            case "putStrg":     baos.write(0x1B); break;
             default:
                 break;
         }
@@ -413,7 +417,7 @@ public class Parser extends Lexer{
             return true;
         
         }};
-        statement[19] = new ArcSymbol('!', 20, 21);
+        statement[19] = new ArcSymbol('!', 26, 21);
         statement[20] = new ArcGraph(expression, 22, 0){boolean action(){
             genCode("putVal");
             return true;

@@ -7,7 +7,7 @@ public class Parser extends Lexer{
     Token t;
     Arc[] block=new Arc[20];
     Arc[] program=new Arc[3];
-    Arc[] statement=new Arc[26];
+    Arc[] statement=new Arc[27];
     Arc[] expression=new Arc[11];
     Arc[] term=new Arc[8];
     Arc[] factor=new Arc[6];
@@ -414,7 +414,7 @@ public class Parser extends Lexer{
         
         }};
         statement[19] = new ArcSymbol('!', 20, 21);
-        statement[20] = new ArcGraph(expression, 22, 21){boolean action(){
+        statement[20] = new ArcGraph(expression, 22, 0){boolean action(){
             genCode("putVal");
             return true;
         }};
@@ -436,6 +436,10 @@ public class Parser extends Lexer{
         statement[25] = new ArcGraph(statement, 22, 0){boolean action(){
             short labelIf = labels.pop();
             replaceAt(labelIf, (short)(baos.size()-labelIf-2));
+            return true;
+        }};
+        statement[26] = new ArcToken(lexer.new Token(4), 22, 20){boolean action(){
+            //generate String; how to put String?? -> statement 19 (next->26 (20 alternative))
             return true;
         }};
 

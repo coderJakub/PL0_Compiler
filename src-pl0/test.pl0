@@ -5,7 +5,7 @@ begin
     ?b;
     if b>a then
     begin
-        !120;
+        !"lost";
         !92;
     end;
     !a

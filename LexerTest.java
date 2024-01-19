@@ -12,18 +12,18 @@ public class LexerTest extends Lexer{
             t=lexer.Lex();
             switch(t.type){
                 case 1:
-                    if(t.sym<128)System.out.println("Symbol: "+(char)t.sym);
+                    if(t.sym<128)System.out.println("Symbol : "+(char)t.sym);
                     else 
-                        System.out.println("Symbol: "+sym[t.sym-128]);
+                        System.out.println("Symbol : "+sym[t.sym-128]);
                     break;
                 case 2:
-                    System.out.println("Number: "+t.num);
+                    System.out.println("Number : "+t.num);
                     break;
                 case 3:
-                    System.out.println("String: "+t.str);
+                    System.out.println("Keyword: "+t.str);
                     break;
                 case 4:
-                    System.out.println("Keyword: "+t.str);
+                    System.out.println("String : "+t.str);
                     break;
                 default:
                     System.out.println("Unknown Token: "+t.type);

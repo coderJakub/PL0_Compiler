@@ -135,7 +135,9 @@ public class Parser extends Lexer{
         baos.write((value >> 24) & 0xFF);
     }
     public void writeStringToByteArray(String value) {
-        for(int i=0; i<value.length(); i++)baos.write(value.charAt(i));
+        value = value.substring(1, value.length()-1);
+        baos.write(value.getBytes(), 0, (value.getBytes()).length);
+        baos.write(0);
     }
 
 
@@ -443,7 +445,6 @@ public class Parser extends Lexer{
             return true;
         }};
         statement[26] = new ArcToken(lexer.new Token(4), 22, 20){boolean action(){
-            //generate String; how to put String?? -> statement 19 (next->26 (20 alternative))
             genCode("putStrg");
             writeStringToByteArray(t.str);
             return true;

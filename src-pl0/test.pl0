@@ -1,12 +1,12 @@
 const c=2;
 var a,b,m;
 begin
+    !"Eingabe von a:";
     ?a;
+    !"Eingabe von b:";
     ?b;
-    if b>a then
-    begin
-        !"lost";
-        !92;
-    end;
-    !a
+    if b>a then 
+        !"a ist kleiner als b"
+    else
+        !"a ist groesser als b";
 end.

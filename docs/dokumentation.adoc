@@ -77,7 +77,7 @@ Zum Testen de Lexers kann folgendes Java-Projekt verwendet werden, dieses generi
 link:../LexerTest.java[]
 
 
-== 2. Parser
+== 2. Parsgraphen
 
 === 2.1 Erstellung der Bogen-Klassen
 
@@ -171,4 +171,29 @@ image::Block-namelist-func.png[]
 * es soll die Parent Procedure von `_Procedure currentProc_` als aktuelle Prozedur gesetzt werden und die Namesliste der verlassenen Funktion soll gelöscht werden
 
 Bei allen Funktionen wird bei keinem Fehler true zurückgegeben und somit wird die `_compareArc()_` Funktion als true ausgewertet
-// hier dann Graphen mit Aktionen für Namensliste
+
+== 4. Codegenerierung
+
+=== 4.1 Hilfsfunktionen
+
+* zum zwischenspeichern des generierten Codes wird ein `byte[] code` in welchen mithilfe von einem ByteArrayOutputstream mit einem DataOutputStream geschrieben wird -> wird nach Ende einer Prozedur in die Datei geschrieben
+* mit der Funktion `genCode(String command, int... args)` kann ein Befehl mit beliebig vielen Argumenten generiert werden
+* die für den Befehl relevanten Argumente werden mit `writeArg(int... args)` als short-Werte in das byte[] geschrieben
+* zuvor wird der Befehl als Byte mit `writeCommand(String command)` ausgeschrieben
+* aus verschiedenen Grüden ist später eine Ersetzungfunktion relevant (zB. bei Sprungbefehlen, oder beim Nachtragen der Codelänge), diese ist mit `replaceAt(int position, short value)` realisiert
+* für das Nachtragen der Prozeduranzahl muss an der ersten Stelle der Datei ein short nachgetragen werden, dies passiert mit `writeProcNum()`
+
+=== 4.2 Grundlegende Codegenerierung
+
+* *Ziel:* Generierung von !5. ->Factor, Block, Statement Output (EntryProc, retProc) müssen implementiert werden
+
+* bl5: Generierung von entryProc -> Codelänge: 0 (nachtragen in bl6), ProcIdx: currProc.idx, Varlen: currProc.varlen
+* bl6: es wird retProc generiert und die Codelänge der Prozedur wird nachgetragen, dann wird das byte[] in die Datei ausgeschrieben
+* st10: Generierung von putVal (Ausgabe)
+* fa1: suche nach Konstante im ConstBlock ->wenn nicht vorhanden anlegen!, puConst(Idx)
+* fa2: globale Suche in Namensliste, überprüfen ob Variable, oder Konstante ->sonst Fehler, Generierung: puVarVlLocl/puVarVlMain/puVarVLGlob/puConst
+* Auschreibung des Constblocks: hintereinander als Integer nach erfolgreicher Codegenerierung
+
+=== 4.3 Generierung von Expression und Term
+
+* *Ziel:* Generierung `const c=1; !5+c.`   

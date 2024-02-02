@@ -185,7 +185,7 @@ Bei allen Funktionen wird bei keinem Fehler true zurückgegeben und somit wird d
 
 === 4.2 Grundlegende Codegenerierung
 
-* *Ziel:* Generierung von !5. ->Factor, Block, Statement Output (EntryProc, retProc) müssen implementiert werden
+* *Ziel:* Generierung von `!5`. ->Factor, Block, Statement Output (EntryProc, retProc) müssen implementiert werden
 
 * bl5: Generierung von entryProc -> Codelänge: 0 (nachtragen in bl6), ProcIdx: currProc.idx, Varlen: currProc.varlen
 * bl6: es wird retProc generiert und die Codelänge der Prozedur wird nachgetragen, dann wird das byte[] in die Datei ausgeschrieben
@@ -196,4 +196,33 @@ Bei allen Funktionen wird bei keinem Fehler true zurückgegeben und somit wird d
 
 === 4.3 Generierung von Expression und Term
 
-* *Ziel:* Generierung `const c=1; !5+c.`   
+* *Ziel:* Generierung `const c=1; !5+c`.
+
+* ex1: negatives Vorzeichen
+* ex2: Codergenerierung opAdd
+* ex3: Codergenerierung opSub
+* te1: Codergenerierung opMul
+* te2: Codergenerierung opDiv
+* fa1: Konsante suchen (ggf. anlegen) -> puConst(Idx) generieren
+* fa2: Bezeichner suchen, überprüfen ob Variable, oder Konstante ->sonst Fehler, entsprechende Codegenerierung
+
+=== 4.4 Implementierung von Labeln und Sprüngen
+
+* die Labels sind nötig um die richtige Adresse für Sprünge zu finden, gespeichert werden diese in `Stack<Short> labels`
+* im Label wird immer die Adresse nach dem nächsten Befehl gespeichert
+
+* somit können die restlichen Funktionen zur Codegenerierung implementiert werden
+
+== 5. Erweiterung von PL0
+
+=== 5.1 String-Ausgabe
+
+* Im Lexer muss eine Zeichenklasse für " hinzugefügt werden
+* zusätzlich muss die Automatentabelle so erweitert werden, dass ein String als ein Token erkannt wird -> auch ein neues Token nötig
+* beim Parser muss lediglich bei der Ausgabe zwischen String und Zahl unterschieden werden, sodass die richtige Codegenerierung passiert
+
+=== 5.2 Else-Statement
+
+* Im Parsgraphen Statement müssen neue Bögen für das Else-Statement hinzugefügt werden
+** da aber das Else-Statement optional ist, wird ein alternativer Nil-Bogen hinzugefügt
+* zusätzlich muss die Codegenerierung so erweitert werden, dass die Sprungadresse für das Else-Statement nachträglich eingefügt wird
